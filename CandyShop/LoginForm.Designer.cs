@@ -34,6 +34,7 @@
             txtLogin = new TextBox();
             txtPassword = new TextBox();
             button1 = new Button();
+            chkShowPassword = new CheckBox();
             SuspendLayout();
             // 
             // label1
@@ -87,11 +88,23 @@
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
             // 
+            // chkShowPassword
+            // 
+            chkShowPassword.AutoSize = true;
+            chkShowPassword.Location = new Point(471, 190);
+            chkShowPassword.Name = "chkShowPassword";
+            chkShowPassword.Size = new Size(119, 19);
+            chkShowPassword.TabIndex = 7;
+            chkShowPassword.Text = "Показать пароль";
+            chkShowPassword.UseVisualStyleBackColor = true;
+            chkShowPassword.CheckedChanged += chkShowPassword_CheckedChanged;
+            // 
             // LoginForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(chkShowPassword);
             Controls.Add(button1);
             Controls.Add(txtPassword);
             Controls.Add(txtLogin);
@@ -113,5 +126,6 @@
         private TextBox txtLogin;
         private TextBox txtPassword;
         private Button button1;
+        private CheckBox chkShowPassword;
     }
 }

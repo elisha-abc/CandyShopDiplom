@@ -17,6 +17,8 @@ namespace CandyShop
             this.Text = "Авторизация";
             this.StartPosition = FormStartPosition.CenterScreen;
             this.AcceptButton = button1;
+
+            txtLogin.Focus();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -26,37 +28,30 @@ namespace CandyShop
 
             if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show(
-                    "Введите логин и пароль.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
+                MessageBox.Show("Введите логин и пароль.", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             if (login == "admin" && password == "12345")
             {
-                MessageBox.Show(
-                    "Вход выполнен успешно!",
-                    "Успех",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
-
                 MainForm mainForm = new MainForm();
                 mainForm.Show();
                 this.Hide();
             }
             else
             {
-                MessageBox.Show(
-                    "Неверный логин или пароль.",
-                    "Ошибка входа",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                MessageBox.Show("Неверный логин или пароль.", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 txtPassword.Clear();
                 txtPassword.Focus();
             }
+        }
+
+        private void chkShowPassword_CheckedChanged(object sender, EventArgs e)
+        {
+            txtPassword.UseSystemPasswordChar = !chkShowPassword.Checked;
         }
     }
 }
