@@ -1,0 +1,2 @@
+# CandyShopDiploma
+диплом
