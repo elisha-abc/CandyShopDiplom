@@ -11,12 +11,24 @@ namespace CandyShop
         {
             InitializeComponent();
         }
-
+         
         private void ProductsForm_Load(object sender, EventArgs e)
         {
             this.Text = "Товары";
             this.StartPosition = FormStartPosition.CenterScreen;
 
+            cmbCategory.Items.Clear();
+            cmbSupplier.Items.Clear();
+
+            foreach (var category in DataStorage.Categories)
+            {
+                cmbCategory.Items.Add(category);
+            }
+
+            foreach (var supplier in DataStorage.Suppliers)
+            {
+                cmbSupplier.Items.Add(supplier);
+            }
             cmbCategory.Items.Clear();
             cmbCategory.Items.AddRange(new string[]
             {
@@ -59,6 +71,7 @@ namespace CandyShop
             dgvProducts.ReadOnly = true;
             dgvProducts.AllowUserToAddRows = false;
         }
+
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
