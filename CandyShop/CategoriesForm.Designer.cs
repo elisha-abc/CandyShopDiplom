@@ -104,7 +104,6 @@
             dgvCategories.Size = new Size(775, 258);
             dgvCategories.TabIndex = 6;
             dgvCategories.CellClick += dgvCategories_CellClick;
-            dgvCategories.CellContentClick += dgvCategories_CellContentClick;
             // 
             // CategoriesForm
             // 
