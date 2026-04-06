@@ -1,5 +1,7 @@
-﻿using System;
+﻿using CandyShop;
+using System;
 using System.Windows.Forms;
+
 
 namespace CandyShop
 {
