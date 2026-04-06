@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Data;
 using System.Windows.Forms;
+using Microsoft.Data.SqlClient;
 
 namespace CandyShop
 {
     public partial class SuppliersForm : Form
     {
-        private int selectedRowIndex = -1;
+        private int selectedSupplierId = -1;
 
         public SuppliersForm()
         {
@@ -17,47 +19,114 @@ namespace CandyShop
             this.Text = "Поставщики";
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            dgvSuppliers.ColumnCount = 1;
-            dgvSuppliers.Columns[0].Name = "Название поставщика";
-
             dgvSuppliers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvSuppliers.MultiSelect = false;
             dgvSuppliers.ReadOnly = true;
             dgvSuppliers.AllowUserToAddRows = false;
+            dgvSuppliers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+            LoadSuppliers();
+        }
+
+        private void LoadSuppliers()
+        {
+            try
+            {
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+
+                    string query = "SELECT Id, Name AS [Название поставщика] FROM Suppliers";
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+
+                    dgvSuppliers.DataSource = table;
+                    dgvSuppliers.Columns["Id"].Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки поставщиков: " + ex.Message);
+            }
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (!ValidateInputs())
+            if (string.IsNullOrWhiteSpace(txtSupplierName.Text))
+            {
+                MessageBox.Show("Введите название поставщика.");
+                txtSupplierName.Focus();
                 return;
+            }
 
-            dgvSuppliers.Rows.Add(txtSupplierName.Text.Trim());
-            DataStorage.Suppliers.Add(txtSupplierName.Text.Trim());
-            ClearFields();
+            try
+            {
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+
+                    string query = "INSERT INTO Suppliers (Name) VALUES (@Name)";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", txtSupplierName.Text.Trim());
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                LoadSuppliers();
+                ClearFields();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка добавления поставщика: " + ex.Message);
+            }
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (selectedRowIndex < 0)
+            if (selectedSupplierId < 0)
             {
-                MessageBox.Show("Выберите поставщика для изменения.", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Выберите поставщика для изменения.");
                 return;
             }
 
-            if (!ValidateInputs())
+            if (string.IsNullOrWhiteSpace(txtSupplierName.Text))
+            {
+                MessageBox.Show("Введите название поставщика.");
+                txtSupplierName.Focus();
                 return;
+            }
 
-            dgvSuppliers.Rows[selectedRowIndex].Cells[0].Value = txtSupplierName.Text.Trim();
-            ClearFields();
+            try
+            {
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+
+                    string query = "UPDATE Suppliers SET Name = @Name WHERE Id = @Id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Name", txtSupplierName.Text.Trim());
+                        command.Parameters.AddWithValue("@Id", selectedSupplierId);
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                LoadSuppliers();
+                ClearFields();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка изменения поставщика: " + ex.Message);
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (selectedRowIndex < 0)
+            if (selectedSupplierId < 0)
             {
-                MessageBox.Show("Выберите поставщика для удаления.", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Выберите поставщика для удаления.");
                 return;
             }
 
@@ -67,10 +136,29 @@ namespace CandyShop
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
 
-            if (result == DialogResult.Yes)
+            if (result != DialogResult.Yes)
+                return;
+
+            try
             {
-                dgvSuppliers.Rows.RemoveAt(selectedRowIndex);
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+
+                    string query = "DELETE FROM Suppliers WHERE Id = @Id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", selectedSupplierId);
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                LoadSuppliers();
                 ClearFields();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка удаления поставщика: " + ex.Message);
             }
         }
 
@@ -83,28 +171,17 @@ namespace CandyShop
         {
             if (e.RowIndex >= 0)
             {
-                selectedRowIndex = e.RowIndex;
-                txtSupplierName.Text = dgvSuppliers.Rows[e.RowIndex].Cells[0].Value?.ToString();
-            }
-        }
+                DataGridViewRow row = dgvSuppliers.Rows[e.RowIndex];
 
-        private bool ValidateInputs()
-        {
-            if (string.IsNullOrWhiteSpace(txtSupplierName.Text))
-            {
-                MessageBox.Show("Введите название поставщика.", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                txtSupplierName.Focus();
-                return false;
+                selectedSupplierId = Convert.ToInt32(row.Cells["Id"].Value);
+                txtSupplierName.Text = row.Cells["Название поставщика"].Value.ToString();
             }
-
-            return true;
         }
 
         private void ClearFields()
         {
             txtSupplierName.Clear();
-            selectedRowIndex = -1;
+            selectedSupplierId = -1;
             txtSupplierName.Focus();
         }
     }
