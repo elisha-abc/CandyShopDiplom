@@ -1,5 +1,6 @@
 using System;
 using System.Windows.Forms;
+using Microsoft.Data.SqlClient;
 
 namespace CandyShop
 {
@@ -33,19 +34,44 @@ namespace CandyShop
                 return;
             }
 
-            if (login == "admin" && password == "12345")
+            try
             {
-                MainForm mainForm = new MainForm();
-                mainForm.Show();
-                this.Hide();
-            }
-            else
-            {
-                MessageBox.Show("Неверный логин или пароль.", "Ошибка",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
 
-                txtPassword.Clear();
-                txtPassword.Focus();
+                    string query = "SELECT COUNT(*) FROM Users WHERE Login = @Login AND Password = @Password";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Login", login);
+                        command.Parameters.AddWithValue("@Password", password);
+
+                        int count = (int)command.ExecuteScalar();
+
+                        if (count > 0)
+                        {
+                            MainForm mainForm = new MainForm();
+                            mainForm.Show();
+                            this.Hide();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Неверный логин или пароль.", "Ошибка",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                            txtPassword.Clear();
+                            txtPassword.Focus();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка подключения к БД: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
