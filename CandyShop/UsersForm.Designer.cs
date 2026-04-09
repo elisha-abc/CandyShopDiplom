@@ -103,6 +103,7 @@
             btnClear.TabIndex = 14;
             btnClear.Text = "Очистить";
             btnClear.UseVisualStyleBackColor = true;
+            btnClear.Click += btnClear_Click;
             // 
             // btnDelete
             // 
@@ -112,6 +113,7 @@
             btnDelete.TabIndex = 13;
             btnDelete.Text = "Удалить";
             btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Click += btnDelete_Click;
             // 
             // btnEdit
             // 
@@ -121,6 +123,7 @@
             btnEdit.TabIndex = 12;
             btnEdit.Text = "Изменить";
             btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.Click += btnEdit_Click;
             // 
             // btnAdd
             // 
@@ -130,6 +133,7 @@
             btnAdd.TabIndex = 11;
             btnAdd.Text = "Добавить";
             btnAdd.UseVisualStyleBackColor = true;
+            btnAdd.Click += btnAdd_Click;
             // 
             // dgvUsers
             // 
@@ -143,6 +147,7 @@
             dgvUsers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvUsers.Size = new Size(709, 233);
             dgvUsers.TabIndex = 15;
+            dgvUsers.CellClick += dgvUsers_CellClick;
             // 
             // colId
             // 

@@ -36,22 +36,24 @@ namespace CandyShop
 
             try
             {
-                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                using (var connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
 
-                    string query = "SELECT COUNT(*) FROM Users WHERE Login = @Login AND Password = @Password";
+                    string query = "SELECT Role FROM Users WHERE Login = @Login AND Password = @Password";
 
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (var command = new Microsoft.Data.SqlClient.SqlCommand(query, connection))
                     {
                         command.Parameters.AddWithValue("@Login", login);
                         command.Parameters.AddWithValue("@Password", password);
 
-                        int count = (int)command.ExecuteScalar();
+                        object result = command.ExecuteScalar();
 
-                        if (count > 0)
+                        if (result != null)
                         {
-                            MainForm mainForm = new MainForm();
+                            string role = result.ToString();
+
+                            MainForm mainForm = new MainForm(role);
                             mainForm.Show();
                             this.Hide();
                         }

@@ -5,15 +5,29 @@ namespace CandyShop
 {
     public partial class MainForm : Form
     {
-        public MainForm()
+        private string userRole;
+
+        
+        public MainForm(string role)
         {
             InitializeComponent();
+            userRole = role;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
             this.Text = "Главное меню";
             this.StartPosition = FormStartPosition.CenterScreen;
+
+            MessageBox.Show("Роль пользователя: " + userRole);
+
+            if (userRole == "Кассир")
+            {
+                btnCategories.Visible = false;
+                btnSuppliers.Visible = false;
+                btnUsers.Visible = false;
+                btnReports.Visible = false;
+            }
         }
 
         private void btnProducts_Click(object sender, EventArgs e)
