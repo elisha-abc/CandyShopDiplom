@@ -48,7 +48,6 @@
             lblTitle.Size = new Size(87, 15);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Главное меню";
-     
             // 
             // btnProducts
             // 
@@ -157,6 +156,7 @@
             Controls.Add(lblTitle);
             Name = "MainForm";
             Text = "MainForm";
+            Load += MainForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }
