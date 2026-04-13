@@ -29,7 +29,7 @@ namespace CandyShop
             LoadWarehouse();
         }
 
-        // Загрузка товаров в ComboBox
+        
         private void LoadProducts()
         {
             cmbProduct.Items.Clear();
