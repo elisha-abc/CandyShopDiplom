@@ -24,6 +24,7 @@ namespace CandyShop
             dgvProducts.ReadOnly = true;
             dgvProducts.AllowUserToAddRows = false;
             dgvProducts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvProducts.RowHeadersVisible = false;
 
             cmbCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSupplier.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -43,7 +44,7 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "SELECT Id, Name FROM Categories";
+                    string query = "SELECT Id, Name FROM Categories ORDER BY Name";
                     using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
                     {
                         DataTable table = new DataTable();
@@ -58,7 +59,10 @@ namespace CandyShop
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка загрузки категорий: " + ex.Message);
+                MessageBox.Show("Ошибка загрузки категорий: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -70,7 +74,7 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "SELECT Id, Name FROM Suppliers";
+                    string query = "SELECT Id, Name FROM Suppliers ORDER BY Name";
                     using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
                     {
                         DataTable table = new DataTable();
@@ -85,7 +89,10 @@ namespace CandyShop
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка загрузки поставщиков: " + ex.Message);
+                MessageBox.Show("Ошибка загрузки поставщиков: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -116,7 +123,8 @@ namespace CandyShop
                             p.Unit AS [Ед. изм.]
                         FROM Products p
                         LEFT JOIN Categories c ON p.CategoryId = c.Id
-                        LEFT JOIN Suppliers s ON p.SupplierId = s.Id";
+                        LEFT JOIN Suppliers s ON p.SupplierId = s.Id
+                        ORDER BY p.Name";
 
                     using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
                     {
@@ -124,13 +132,18 @@ namespace CandyShop
                         adapter.Fill(table);
 
                         dgvProducts.DataSource = table;
-                        dgvProducts.Columns["Id"].Visible = false;
+
+                        if (dgvProducts.Columns["Id"] != null)
+                            dgvProducts.Columns["Id"].Visible = false;
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка загрузки товаров: " + ex.Message);
+                MessageBox.Show("Ошибка загрузки товаров: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -161,12 +174,20 @@ namespace CandyShop
                     }
                 }
 
+                MessageBox.Show("Товар успешно добавлен.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadProducts();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка добавления товара: " + ex.Message);
+                MessageBox.Show("Ошибка добавления товара: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -174,7 +195,10 @@ namespace CandyShop
         {
             if (selectedProductId < 0)
             {
-                MessageBox.Show("Выберите товар для изменения.");
+                MessageBox.Show("Выберите товар для изменения.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
@@ -209,12 +233,20 @@ namespace CandyShop
                     }
                 }
 
+                MessageBox.Show("Товар успешно изменён.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadProducts();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка изменения товара: " + ex.Message);
+                MessageBox.Show("Ошибка изменения товара: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -222,7 +254,10 @@ namespace CandyShop
         {
             if (selectedProductId < 0)
             {
-                MessageBox.Show("Выберите товар для удаления.");
+                MessageBox.Show("Выберите товар для удаления.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
@@ -241,21 +276,62 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "DELETE FROM Products WHERE Id = @Id";
+                    // Проверка: используется ли товар на складе
+                    string checkWarehouseQuery = "SELECT COUNT(*) FROM Warehouse WHERE ProductId = @Id";
+                    using (SqlCommand checkWarehouseCmd = new SqlCommand(checkWarehouseQuery, connection))
+                    {
+                        checkWarehouseCmd.Parameters.AddWithValue("@Id", selectedProductId);
+                        int warehouseCount = Convert.ToInt32(checkWarehouseCmd.ExecuteScalar());
 
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                        if (warehouseCount > 0)
+                        {
+                            MessageBox.Show("Нельзя удалить товар, так как он используется на складе.",
+                                "Ошибка",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                            return;
+                        }
+                    }
+
+                    // Проверка: используется ли товар в продажах
+                    string checkSalesQuery = "SELECT COUNT(*) FROM Sales WHERE ProductId = @Id";
+                    using (SqlCommand checkSalesCmd = new SqlCommand(checkSalesQuery, connection))
+                    {
+                        checkSalesCmd.Parameters.AddWithValue("@Id", selectedProductId);
+                        int salesCount = Convert.ToInt32(checkSalesCmd.ExecuteScalar());
+
+                        if (salesCount > 0)
+                        {
+                            MessageBox.Show("Нельзя удалить товар, так как он используется в продажах.",
+                                "Ошибка",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                            return;
+                        }
+                    }
+
+                    string deleteQuery = "DELETE FROM Products WHERE Id = @Id";
+                    using (SqlCommand command = new SqlCommand(deleteQuery, connection))
                     {
                         command.Parameters.AddWithValue("@Id", selectedProductId);
                         command.ExecuteNonQuery();
                     }
                 }
 
+                MessageBox.Show("Товар успешно удалён.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
                 LoadProducts();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка удаления товара: " + ex.Message);
+                MessageBox.Show("Ошибка удаления товара: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -299,26 +375,72 @@ namespace CandyShop
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка выбора товара: " + ex.Message);
+                MessageBox.Show("Ошибка выбора товара: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
         private bool ValidateInputs()
         {
-            if (string.IsNullOrWhiteSpace(txtName.Text) ||
-                cmbCategory.SelectedIndex == -1 ||
-                cmbSupplier.SelectedIndex == -1 ||
-                string.IsNullOrWhiteSpace(txtPrice.Text) ||
-                string.IsNullOrWhiteSpace(cmbUnit.Text))
+            if (string.IsNullOrWhiteSpace(txtName.Text))
             {
-                MessageBox.Show("Заполните все поля.");
+                MessageBox.Show("Введите название товара.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtName.Focus();
                 return false;
             }
 
-            if (!decimal.TryParse(txtPrice.Text.Trim(), out decimal price) || price < 0)
+            if (cmbCategory.SelectedIndex == -1)
             {
-                MessageBox.Show("Введите корректную цену.");
+                MessageBox.Show("Выберите категорию.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbCategory.Focus();
+                return false;
+            }
+
+            if (cmbSupplier.SelectedIndex == -1)
+            {
+                MessageBox.Show("Выберите поставщика.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbSupplier.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtPrice.Text))
+            {
+                MessageBox.Show("Введите цену.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 txtPrice.Focus();
+                return false;
+            }
+
+            if (!decimal.TryParse(txtPrice.Text.Trim(), out decimal price) || price <= 0)
+            {
+                MessageBox.Show("Введите корректную цену больше 0.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtPrice.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(cmbUnit.Text))
+            {
+                MessageBox.Show("Выберите единицу измерения.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbUnit.Focus();
                 return false;
             }
 
