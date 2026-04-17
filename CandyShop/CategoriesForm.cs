@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
 
@@ -7,7 +6,7 @@ namespace CandyShop
 {
     public partial class CategoriesForm : Form
     {
-        private int selectedCategoryId = -1;
+        private int selectedId = -1;
 
         public CategoriesForm()
         {
@@ -24,41 +23,64 @@ namespace CandyShop
             dgvCategories.ReadOnly = true;
             dgvCategories.AllowUserToAddRows = false;
             dgvCategories.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvCategories.RowHeadersVisible = false;
 
             LoadCategories();
         }
 
         private void LoadCategories()
         {
+            dgvCategories.Rows.Clear();
+
             try
             {
                 using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
 
-                    string query = "SELECT Id, Name AS [Название категории] FROM Categories";
-                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
-                    DataTable table = new DataTable();
-                    adapter.Fill(table);
+                    string query = "SELECT Id, Name FROM Categories ORDER BY Name";
 
-                    dgvCategories.DataSource = table;
-                    dgvCategories.Columns["Id"].Visible = false;
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            dgvCategories.Rows.Add(
+                                reader["Id"],
+                                reader["Name"]
+                            );
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка загрузки категорий: " + ex.Message);
+                MessageBox.Show("Ошибка загрузки категорий: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
+        }
+
+        private bool ValidateInputs()
+        {
+            if (string.IsNullOrWhiteSpace(txtCategoryName.Text))
+            {
+                MessageBox.Show("Введите название категории.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtCategoryName.Focus();
+                return false;
+            }
+
+            return true;
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtCategoryName.Text))
-            {
-                MessageBox.Show("Введите название категории.");
-                txtCategoryName.Focus();
+            if (!ValidateInputs())
                 return;
-            }
 
             try
             {
@@ -66,37 +88,45 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "INSERT INTO Categories (Name) VALUES (@Name)";
+                    string query = "INSERT INTO Categories (Name) VALUES (@name)";
+
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@Name", txtCategoryName.Text.Trim());
+                        command.Parameters.AddWithValue("@name", txtCategoryName.Text.Trim());
                         command.ExecuteNonQuery();
                     }
                 }
+
+                MessageBox.Show("Категория успешно добавлена.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
 
                 LoadCategories();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка добавления категории: " + ex.Message);
+                MessageBox.Show("Ошибка добавления категории: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if (selectedCategoryId < 0)
+            if (selectedId == -1)
             {
-                MessageBox.Show("Выберите категорию для изменения.");
+                MessageBox.Show("Выберите категорию для изменения.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCategoryName.Text))
-            {
-                MessageBox.Show("Введите название категории.");
-                txtCategoryName.Focus();
+            if (!ValidateInputs())
                 return;
-            }
 
             try
             {
@@ -104,29 +134,41 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "UPDATE Categories SET Name = @Name WHERE Id = @Id";
+                    string query = "UPDATE Categories SET Name = @name WHERE Id = @id";
+
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        command.Parameters.AddWithValue("@Name", txtCategoryName.Text.Trim());
-                        command.Parameters.AddWithValue("@Id", selectedCategoryId);
+                        command.Parameters.AddWithValue("@name", txtCategoryName.Text.Trim());
+                        command.Parameters.AddWithValue("@id", selectedId);
                         command.ExecuteNonQuery();
                     }
                 }
+
+                MessageBox.Show("Категория успешно изменена.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
 
                 LoadCategories();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка изменения категории: " + ex.Message);
+                MessageBox.Show("Ошибка изменения категории: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (selectedCategoryId < 0)
+            if (selectedId == -1)
             {
-                MessageBox.Show("Выберите категорию для удаления.");
+                MessageBox.Show("Выберите категорию для удаления.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
@@ -145,20 +187,44 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    string query = "DELETE FROM Categories WHERE Id = @Id";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    string checkQuery = "SELECT COUNT(*) FROM Products WHERE CategoryId = @id";
+                    using (SqlCommand checkCommand = new SqlCommand(checkQuery, connection))
                     {
-                        command.Parameters.AddWithValue("@Id", selectedCategoryId);
-                        command.ExecuteNonQuery();
+                        checkCommand.Parameters.AddWithValue("@id", selectedId);
+                        int count = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+                        if (count > 0)
+                        {
+                            MessageBox.Show("Нельзя удалить категорию, так как она используется в товарах.",
+                                "Ошибка",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                            return;
+                        }
+                    }
+
+                    string deleteQuery = "DELETE FROM Categories WHERE Id = @id";
+                    using (SqlCommand deleteCommand = new SqlCommand(deleteQuery, connection))
+                    {
+                        deleteCommand.Parameters.AddWithValue("@id", selectedId);
+                        deleteCommand.ExecuteNonQuery();
                     }
                 }
+
+                MessageBox.Show("Категория успешно удалена.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
 
                 LoadCategories();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка удаления категории: " + ex.Message);
+                MessageBox.Show("Ошибка удаления категории: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -173,15 +239,15 @@ namespace CandyShop
             {
                 DataGridViewRow row = dgvCategories.Rows[e.RowIndex];
 
-                selectedCategoryId = Convert.ToInt32(row.Cells["Id"].Value);
-                txtCategoryName.Text = row.Cells["Название категории"].Value.ToString();
+                selectedId = Convert.ToInt32(row.Cells["colId"].Value);
+                txtCategoryName.Text = row.Cells["colName"].Value?.ToString();
             }
         }
 
         private void ClearFields()
         {
             txtCategoryName.Clear();
-            selectedCategoryId = -1;
+            selectedId = -1;
             txtCategoryName.Focus();
         }
     }

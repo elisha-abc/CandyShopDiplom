@@ -35,6 +35,8 @@
             btnDelete = new Button();
             btnClear = new Button();
             dgvCategories = new DataGridView();
+            colId = new DataGridViewTextBoxColumn();
+            colName = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvCategories).BeginInit();
             SuspendLayout();
             // 
@@ -46,7 +48,6 @@
             lblCategoryName.Size = new Size(121, 15);
             lblCategoryName.TabIndex = 0;
             lblCategoryName.Text = "Название категории:";
-            
             // 
             // txtCategoryName
             // 
@@ -54,7 +55,6 @@
             txtCategoryName.Name = "txtCategoryName";
             txtCategoryName.Size = new Size(226, 23);
             txtCategoryName.TabIndex = 1;
-            
             // 
             // btnAdd
             // 
@@ -99,11 +99,23 @@
             // dgvCategories
             // 
             dgvCategories.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvCategories.Columns.AddRange(new DataGridViewColumn[] { colId, colName });
             dgvCategories.Location = new Point(12, 184);
             dgvCategories.Name = "dgvCategories";
             dgvCategories.Size = new Size(775, 258);
             dgvCategories.TabIndex = 6;
             dgvCategories.CellClick += dgvCategories_CellClick;
+            // 
+            // colId
+            // 
+            colId.HeaderText = "Id";
+            colId.Name = "colId";
+            colId.Visible = false;
+            // 
+            // colName
+            // 
+            colName.HeaderText = "Название категории";
+            colName.Name = "colName";
             // 
             // CategoriesForm
             // 
@@ -134,5 +146,7 @@
         private Button btnDelete;
         private Button btnClear;
         private DataGridView dgvCategories;
+        private DataGridViewTextBoxColumn colId;
+        private DataGridViewTextBoxColumn colName;
     }
 }
