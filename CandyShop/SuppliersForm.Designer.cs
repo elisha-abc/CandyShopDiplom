@@ -35,12 +35,15 @@
             btnAdd = new Button();
             txtSupplierName = new TextBox();
             lblSupplierName = new Label();
+            colId = new DataGridViewTextBoxColumn();
+            colName = new DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)dgvSuppliers).BeginInit();
             SuspendLayout();
             // 
             // dgvSuppliers
             // 
             dgvSuppliers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvSuppliers.Columns.AddRange(new DataGridViewColumn[] { colId, colName });
             dgvSuppliers.Location = new Point(13, 163);
             dgvSuppliers.Name = "dgvSuppliers";
             dgvSuppliers.Size = new Size(775, 258);
@@ -103,6 +106,17 @@
             lblSupplierName.TabIndex = 7;
             lblSupplierName.Text = "Название поставщика:";
             // 
+            // colId
+            // 
+            colId.HeaderText = "Id";
+            colId.Name = "colId";
+            colId.Visible = false;
+            // 
+            // colName
+            // 
+            colName.HeaderText = "Название поставщика";
+            colName.Name = "colName";
+            // 
             // SuppliersForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -132,5 +146,7 @@
         private Button btnAdd;
         private TextBox txtSupplierName;
         private Label lblSupplierName;
+        private DataGridViewTextBoxColumn colId;
+        private DataGridViewTextBoxColumn colName;
     }
 }
