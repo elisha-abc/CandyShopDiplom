@@ -29,10 +29,12 @@ namespace CandyShop
             cmbCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSupplier.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbUnit.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFilterCategory.DropDownStyle = ComboBoxStyle.DropDownList;
 
             LoadCategories();
             LoadSuppliers();
             LoadUnits();
+            LoadFilterCategories();
             LoadProducts();
         }
 
@@ -43,18 +45,16 @@ namespace CandyShop
                 using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
-
                     string query = "SELECT Id, Name FROM Categories ORDER BY Name";
-                    using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
-                    {
-                        DataTable table = new DataTable();
-                        adapter.Fill(table);
 
-                        cmbCategory.DataSource = table;
-                        cmbCategory.DisplayMember = "Name";
-                        cmbCategory.ValueMember = "Id";
-                        cmbCategory.SelectedIndex = -1;
-                    }
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+
+                    cmbCategory.DataSource = table;
+                    cmbCategory.DisplayMember = "Name";
+                    cmbCategory.ValueMember = "Id";
+                    cmbCategory.SelectedIndex = -1;
                 }
             }
             catch (Exception ex)
@@ -73,18 +73,16 @@ namespace CandyShop
                 using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
-
                     string query = "SELECT Id, Name FROM Suppliers ORDER BY Name";
-                    using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
-                    {
-                        DataTable table = new DataTable();
-                        adapter.Fill(table);
 
-                        cmbSupplier.DataSource = table;
-                        cmbSupplier.DisplayMember = "Name";
-                        cmbSupplier.ValueMember = "Id";
-                        cmbSupplier.SelectedIndex = -1;
-                    }
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+
+                    cmbSupplier.DataSource = table;
+                    cmbSupplier.DisplayMember = "Name";
+                    cmbSupplier.ValueMember = "Id";
+                    cmbSupplier.SelectedIndex = -1;
                 }
             }
             catch (Exception ex)
@@ -105,7 +103,40 @@ namespace CandyShop
             cmbUnit.SelectedIndex = -1;
         }
 
-        private void LoadProducts()
+        private void LoadFilterCategories()
+        {
+            try
+            {
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT Id, Name FROM Categories ORDER BY Name";
+
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+
+                    DataRow row = table.NewRow();
+                    row["Id"] = 0;
+                    row["Name"] = "Все";
+                    table.Rows.InsertAt(row, 0);
+
+                    cmbFilterCategory.DataSource = table;
+                    cmbFilterCategory.DisplayMember = "Name";
+                    cmbFilterCategory.ValueMember = "Id";
+                    cmbFilterCategory.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки фильтра категорий: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        private void LoadProducts(string search = "", int categoryId = 0)
         {
             try
             {
@@ -124,18 +155,22 @@ namespace CandyShop
                         FROM Products p
                         LEFT JOIN Categories c ON p.CategoryId = c.Id
                         LEFT JOIN Suppliers s ON p.SupplierId = s.Id
+                        WHERE (@search = '' OR p.Name LIKE '%' + @search + '%')
+                          AND (@cat = 0 OR p.CategoryId = @cat)
                         ORDER BY p.Name";
 
-                    using (SqlDataAdapter adapter = new SqlDataAdapter(query, connection))
-                    {
-                        DataTable table = new DataTable();
-                        adapter.Fill(table);
+                    SqlCommand cmd = new SqlCommand(query, connection);
+                    cmd.Parameters.AddWithValue("@search", search);
+                    cmd.Parameters.AddWithValue("@cat", categoryId);
 
-                        dgvProducts.DataSource = table;
+                    SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
 
-                        if (dgvProducts.Columns["Id"] != null)
-                            dgvProducts.Columns["Id"].Visible = false;
-                    }
+                    dgvProducts.DataSource = table;
+
+                    if (dgvProducts.Columns["Id"] != null)
+                        dgvProducts.Columns["Id"].Visible = false;
                 }
             }
             catch (Exception ex)
@@ -145,6 +180,82 @@ namespace CandyShop
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
+        }
+
+        private bool ValidateInputs()
+        {
+            if (string.IsNullOrWhiteSpace(txtName.Text))
+            {
+                MessageBox.Show("Введите название товара.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtName.Focus();
+                return false;
+            }
+
+            if (cmbCategory.SelectedIndex == -1)
+            {
+                MessageBox.Show("Выберите категорию.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbCategory.Focus();
+                return false;
+            }
+
+            if (cmbSupplier.SelectedIndex == -1)
+            {
+                MessageBox.Show("Выберите поставщика.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbSupplier.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtPrice.Text))
+            {
+                MessageBox.Show("Введите цену.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtPrice.Focus();
+                return false;
+            }
+
+            if (!decimal.TryParse(txtPrice.Text.Trim(), out decimal price) || price <= 0)
+            {
+                MessageBox.Show("Введите корректную цену больше 0.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtPrice.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(cmbUnit.Text))
+            {
+                MessageBox.Show("Выберите единицу измерения.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbUnit.Focus();
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ClearFields()
+        {
+            txtName.Clear();
+            cmbCategory.SelectedIndex = -1;
+            cmbSupplier.SelectedIndex = -1;
+            txtPrice.Clear();
+            cmbUnit.SelectedIndex = -1;
+            selectedProductId = -1;
+            txtName.Focus();
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -276,7 +387,6 @@ namespace CandyShop
                 {
                     connection.Open();
 
-                    // Проверка: используется ли товар на складе
                     string checkWarehouseQuery = "SELECT COUNT(*) FROM Warehouse WHERE ProductId = @Id";
                     using (SqlCommand checkWarehouseCmd = new SqlCommand(checkWarehouseQuery, connection))
                     {
@@ -293,7 +403,6 @@ namespace CandyShop
                         }
                     }
 
-                    // Проверка: используется ли товар в продажах
                     string checkSalesQuery = "SELECT COUNT(*) FROM Sales WHERE ProductId = @Id";
                     using (SqlCommand checkSalesCmd = new SqlCommand(checkSalesQuery, connection))
                     {
@@ -340,6 +449,24 @@ namespace CandyShop
             ClearFields();
         }
 
+        private void btnSearch_Click(object sender, EventArgs e)
+        {
+            string search = txtSearch.Text.Trim();
+            int categoryId = 0;
+
+            if (cmbFilterCategory.SelectedValue != null)
+                categoryId = Convert.ToInt32(cmbFilterCategory.SelectedValue);
+
+            LoadProducts(search, categoryId);
+        }
+
+        private void btnResetFilter_Click(object sender, EventArgs e)
+        {
+            txtSearch.Clear();
+            cmbFilterCategory.SelectedIndex = 0;
+            LoadProducts();
+        }
+
         private void dgvProducts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
@@ -380,82 +507,6 @@ namespace CandyShop
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-        }
-
-        private bool ValidateInputs()
-        {
-            if (string.IsNullOrWhiteSpace(txtName.Text))
-            {
-                MessageBox.Show("Введите название товара.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                txtName.Focus();
-                return false;
-            }
-
-            if (cmbCategory.SelectedIndex == -1)
-            {
-                MessageBox.Show("Выберите категорию.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                cmbCategory.Focus();
-                return false;
-            }
-
-            if (cmbSupplier.SelectedIndex == -1)
-            {
-                MessageBox.Show("Выберите поставщика.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                cmbSupplier.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtPrice.Text))
-            {
-                MessageBox.Show("Введите цену.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                txtPrice.Focus();
-                return false;
-            }
-
-            if (!decimal.TryParse(txtPrice.Text.Trim(), out decimal price) || price <= 0)
-            {
-                MessageBox.Show("Введите корректную цену больше 0.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                txtPrice.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(cmbUnit.Text))
-            {
-                MessageBox.Show("Выберите единицу измерения.",
-                    "Ошибка",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                cmbUnit.Focus();
-                return false;
-            }
-
-            return true;
-        }
-
-        private void ClearFields()
-        {
-            txtName.Clear();
-            cmbCategory.SelectedIndex = -1;
-            cmbSupplier.SelectedIndex = -1;
-            txtPrice.Clear();
-            cmbUnit.SelectedIndex = -1;
-            selectedProductId = -1;
-            txtName.Focus();
         }
     }
 }

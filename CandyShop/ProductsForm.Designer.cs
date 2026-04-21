@@ -44,6 +44,12 @@
             txtPrice = new TextBox();
             cmbSupplier = new ComboBox();
             cmbUnit = new ComboBox();
+            label1 = new Label();
+            txtSearch = new TextBox();
+            label2 = new Label();
+            cmbFilterCategory = new ComboBox();
+            btnSearch = new Button();
+            btnResetFilter = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvProducts).BeginInit();
             SuspendLayout();
             // 
@@ -188,11 +194,71 @@
             cmbUnit.Size = new Size(192, 23);
             cmbUnit.TabIndex = 15;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(499, 63);
+            label1.Name = "label1";
+            label1.Size = new Size(45, 15);
+            label1.TabIndex = 16;
+            label1.Text = "Поиск:";
+            // 
+            // txtSearch
+            // 
+            txtSearch.Location = new Point(601, 55);
+            txtSearch.Name = "txtSearch";
+            txtSearch.Size = new Size(201, 23);
+            txtSearch.TabIndex = 17;
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(499, 101);
+            label2.Name = "label2";
+            label2.Size = new Size(66, 15);
+            label2.TabIndex = 18;
+            label2.Text = "Категория:";
+            // 
+            // cmbFilterCategory
+            // 
+            cmbFilterCategory.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFilterCategory.FormattingEnabled = true;
+            cmbFilterCategory.Location = new Point(601, 93);
+            cmbFilterCategory.Name = "cmbFilterCategory";
+            cmbFilterCategory.Size = new Size(201, 23);
+            cmbFilterCategory.TabIndex = 19;
+            // 
+            // btnSearch
+            // 
+            btnSearch.Location = new Point(499, 199);
+            btnSearch.Name = "btnSearch";
+            btnSearch.Size = new Size(204, 43);
+            btnSearch.TabIndex = 20;
+            btnSearch.Text = "Найти";
+            btnSearch.UseVisualStyleBackColor = true;
+            btnSearch.Click += btnSearch_Click;
+            // 
+            // btnResetFilter
+            // 
+            btnResetFilter.Location = new Point(743, 199);
+            btnResetFilter.Name = "btnResetFilter";
+            btnResetFilter.Size = new Size(204, 43);
+            btnResetFilter.TabIndex = 21;
+            btnResetFilter.Text = "Сброс";
+            btnResetFilter.UseVisualStyleBackColor = true;
+            btnResetFilter.Click += btnResetFilter_Click;
+            // 
             // ProductsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(984, 561);
+            Controls.Add(btnResetFilter);
+            Controls.Add(btnSearch);
+            Controls.Add(cmbFilterCategory);
+            Controls.Add(label2);
+            Controls.Add(txtSearch);
+            Controls.Add(label1);
             Controls.Add(cmbUnit);
             Controls.Add(cmbSupplier);
             Controls.Add(txtPrice);
@@ -236,5 +302,11 @@
         private TextBox txtPrice;
         private ComboBox cmbSupplier;
         private ComboBox cmbUnit;
+        private Label label1;
+        private TextBox txtSearch;
+        private Label label2;
+        private ComboBox cmbFilterCategory;
+        private Button btnSearch;
+        private Button btnResetFilter;
     }
 }
