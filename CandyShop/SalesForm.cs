@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
 
@@ -6,7 +7,7 @@ namespace CandyShop
 {
     public partial class SalesForm : Form
     {
-        private int selectedId = -1;
+        private int selectedSaleId = -1;
 
         public SalesForm()
         {
@@ -25,23 +26,23 @@ namespace CandyShop
             dgvSales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvSales.RowHeadersVisible = false;
 
+            cmbProduct.DropDownStyle = ComboBoxStyle.DropDownList;
+
             LoadProducts();
             LoadSales();
         }
 
         private void LoadProducts()
         {
-            cmbProduct.DataSource = null;
-
-            using (var connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
-
-                string query = "SELECT Id, Name FROM Products";
-
-                using (var adapter = new SqlDataAdapter(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    var table = new System.Data.DataTable();
+                    connection.Open();
+
+                    string query = "SELECT Id, Name FROM Products ORDER BY Name";
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
                     adapter.Fill(table);
 
                     cmbProduct.DataSource = table;
@@ -50,66 +51,98 @@ namespace CandyShop
                     cmbProduct.SelectedIndex = -1;
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки товаров: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void LoadSales()
         {
-            dgvSales.Rows.Clear();
-
-            using (var connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
-
-                string query = @"
-                    SELECT s.Id, p.Name, s.Quantity, s.SaleDate
-                    FROM Sales s
-                    JOIN Products p ON s.ProductId = p.Id";
-
-                using (var cmd = new SqlCommand(query, connection))
-                using (var reader = cmd.ExecuteReader())
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    while (reader.Read())
-                    {
-                        dgvSales.Rows.Add(
-                            reader["Id"],
-                            reader["Name"],
-                            reader["Quantity"],
-                            Convert.ToDateTime(reader["SaleDate"]).ToShortDateString()
-                        );
-                    }
+                    connection.Open();
+
+                    string query = @"
+                        SELECT 
+                            s.Id,
+                            p.Name AS [Товар],
+                            s.Quantity AS [Количество],
+                            s.SaleDate AS [Дата продажи]
+                        FROM Sales s
+                        JOIN Products p ON s.ProductId = p.Id
+                        ORDER BY s.SaleDate DESC";
+
+                    SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                    DataTable table = new DataTable();
+                    adapter.Fill(table);
+
+                    dgvSales.DataSource = table;
+
+                    if (dgvSales.Columns["Id"] != null)
+                        dgvSales.Columns["Id"].Visible = false;
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки продаж: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
         private bool ValidateInputs()
         {
-            if (cmbProduct.SelectedIndex == -1 || string.IsNullOrWhiteSpace(txtQuantity.Text))
+            if (cmbProduct.SelectedIndex == -1)
             {
-                MessageBox.Show("Заполните все поля.");
+                MessageBox.Show("Выберите товар.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                cmbProduct.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtQuantity.Text))
+            {
+                MessageBox.Show("Введите количество.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtQuantity.Focus();
                 return false;
             }
 
             if (!int.TryParse(txtQuantity.Text.Trim(), out int quantity) || quantity <= 0)
             {
-                MessageBox.Show("Введите корректное количество.");
+                MessageBox.Show("Введите корректное количество больше 0.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                txtQuantity.Focus();
                 return false;
             }
 
             return true;
         }
 
-        private int GetWarehouseQuantity(int productId)
+        private int GetStockQuantity(int productId)
         {
-            using (var connection = DatabaseHelper.GetConnection())
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
             {
                 connection.Open();
 
-                string query = "SELECT ISNULL(SUM(Quantity), 0) FROM Warehouse WHERE ProductId = @productId";
-
-                using (var cmd = new SqlCommand(query, connection))
+                string query = "SELECT ISNULL(SUM(Quantity), 0) FROM Warehouse WHERE ProductId = @ProductId";
+                using (SqlCommand command = new SqlCommand(query, connection))
                 {
-                    cmd.Parameters.AddWithValue("@productId", productId);
-                    return Convert.ToInt32(cmd.ExecuteScalar());
+                    command.Parameters.AddWithValue("@ProductId", productId);
+                    return Convert.ToInt32(command.ExecuteScalar());
                 }
             }
         }
@@ -122,99 +155,128 @@ namespace CandyShop
             int productId = Convert.ToInt32(cmbProduct.SelectedValue);
             int quantity = int.Parse(txtQuantity.Text.Trim());
 
-            int stockQuantity = GetWarehouseQuantity(productId);
-
-            if (stockQuantity < quantity)
+            try
             {
-                MessageBox.Show("Недостаточно товара на складе.");
-                return;
-            }
+                int stockQuantity = GetStockQuantity(productId);
 
-            using (var connection = DatabaseHelper.GetConnection())
-            {
-                connection.Open();
-                SqlTransaction transaction = connection.BeginTransaction();
-
-                try
+                if (stockQuantity < quantity)
                 {
-                    string insertSale = @"
-                        INSERT INTO Sales (ProductId, Quantity, SaleDate)
-                        VALUES (@productId, @quantity, @saleDate)";
-
-                    using (var cmd = new SqlCommand(insertSale, connection, transaction))
-                    {
-                        cmd.Parameters.AddWithValue("@productId", productId);
-                        cmd.Parameters.AddWithValue("@quantity", quantity);
-                        cmd.Parameters.AddWithValue("@saleDate", dtpSaleDate.Value.Date);
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    string updateWarehouse = @"
-                        UPDATE Warehouse
-                        SET Quantity = Quantity - @quantity
-                        WHERE ProductId = @productId";
-
-                    using (var cmd = new SqlCommand(updateWarehouse, connection, transaction))
-                    {
-                        cmd.Parameters.AddWithValue("@quantity", quantity);
-                        cmd.Parameters.AddWithValue("@productId", productId);
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    transaction.Commit();
-                    MessageBox.Show("Продажа добавлена.");
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    MessageBox.Show("Ошибка продажи: " + ex.Message);
+                    MessageBox.Show("Недостаточно товара на складе.",
+                        "Ошибка",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
                     return;
                 }
-            }
 
-            LoadSales();
-            ClearFields();
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+                    SqlTransaction transaction = connection.BeginTransaction();
+
+                    try
+                    {
+                        string insertSaleQuery = @"
+                            INSERT INTO Sales (ProductId, Quantity, SaleDate)
+                            VALUES (@ProductId, @Quantity, @SaleDate)";
+
+                        using (SqlCommand saleCommand = new SqlCommand(insertSaleQuery, connection, transaction))
+                        {
+                            saleCommand.Parameters.AddWithValue("@ProductId", productId);
+                            saleCommand.Parameters.AddWithValue("@Quantity", quantity);
+                            saleCommand.Parameters.AddWithValue("@SaleDate", dtpSaleDate.Value.Date);
+                            saleCommand.ExecuteNonQuery();
+                        }
+
+                        string updateWarehouseQuery = @"
+                            UPDATE Warehouse
+                            SET Quantity = Quantity - @Quantity
+                            WHERE ProductId = @ProductId";
+
+                        using (SqlCommand warehouseCommand = new SqlCommand(updateWarehouseQuery, connection, transaction))
+                        {
+                            warehouseCommand.Parameters.AddWithValue("@Quantity", quantity);
+                            warehouseCommand.Parameters.AddWithValue("@ProductId", productId);
+                            warehouseCommand.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+
+                        MessageBox.Show("Продажа успешно добавлена.",
+                            "Успех",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        MessageBox.Show("Ошибка при продаже: " + ex.Message,
+                            "Ошибка",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+
+                LoadSales();
+                ClearFields();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка добавления продажи: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if (selectedId == -1)
+            if (selectedSaleId < 0)
             {
-                MessageBox.Show("Выберите продажу.");
+                MessageBox.Show("Выберите продажу для удаления.",
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
-            if (MessageBox.Show("Удалить продажу?", "Подтверждение",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            DialogResult result = MessageBox.Show(
+                "Удалить выбранную продажу?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
                 return;
 
-            using (var connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
-
-                string query = "DELETE FROM Sales WHERE Id = @id";
-
-                using (var cmd = new SqlCommand(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@id", selectedId);
-                    cmd.ExecuteNonQuery();
+                    connection.Open();
+
+                    string query = "DELETE FROM Sales WHERE Id = @Id";
+                    using (SqlCommand command = new SqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@Id", selectedSaleId);
+                        command.ExecuteNonQuery();
+                    }
                 }
+
+                MessageBox.Show("Продажа удалена.",
+                    "Успех",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                LoadSales();
+                ClearFields();
             }
-
-            LoadSales();
-            ClearFields();
-        }
-
-        private void dgvSales_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
+            catch (Exception ex)
             {
-                var row = dgvSales.Rows[e.RowIndex];
-
-                selectedId = Convert.ToInt32(row.Cells["colId"].Value);
-                cmbProduct.Text = row.Cells["colProduct"].Value?.ToString();
-                txtQuantity.Text = row.Cells["colQuantity"].Value?.ToString();
-                dtpSaleDate.Value = Convert.ToDateTime(row.Cells["colSaleDate"].Value);
+                MessageBox.Show("Ошибка удаления продажи: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
 
@@ -223,12 +285,35 @@ namespace CandyShop
             ClearFields();
         }
 
+        private void dgvSales_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            try
+            {
+                DataGridViewRow row = dgvSales.Rows[e.RowIndex];
+                selectedSaleId = Convert.ToInt32(row.Cells["Id"].Value);
+
+                cmbProduct.Text = row.Cells["Товар"].Value.ToString();
+                txtQuantity.Text = row.Cells["Количество"].Value.ToString();
+                dtpSaleDate.Value = Convert.ToDateTime(row.Cells["Дата продажи"].Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка выбора продажи: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
         private void ClearFields()
         {
             cmbProduct.SelectedIndex = -1;
             txtQuantity.Clear();
+            selectedSaleId = -1;
             dtpSaleDate.Value = DateTime.Now;
-            selectedId = -1;
         }
     }
 }
