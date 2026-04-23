@@ -190,18 +190,18 @@ namespace CandyShop
 
         private void dgvWarehouse_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0)
-            {
-                var row = dgvWarehouse.Rows[e.RowIndex];
+            if (e.RowIndex < 0)
+                return;
 
-                selectedId = Convert.ToInt32(row.Cells["colId"].Value);
-                txtQuantity.Text = row.Cells["colQuantity"].Value.ToString();
+            var row = dgvWarehouse.Rows[e.RowIndex];
 
-                dtpReceiptDate.Value = Convert.ToDateTime(row.Cells["colReceipt"].Value);
-                dtpExpiryDate.Value = Convert.ToDateTime(row.Cells["colExpiry"].Value);
+            selectedId = Convert.ToInt32(row.Cells["Id"].Value);
+            txtQuantity.Text = row.Cells["Quantity"].Value.ToString();
 
-                cmbProduct.Text = row.Cells["colProduct"].Value.ToString();
-            }
+            dtpReceiptDate.Value = Convert.ToDateTime(row.Cells["ReceiptDate"].Value);
+            dtpExpiryDate.Value = Convert.ToDateTime(row.Cells["ExpiryDate"].Value);
+
+            cmbProduct.Text = row.Cells["Товар"].Value.ToString();
         }
 
         private void btnClear_Click(object sender, EventArgs e)

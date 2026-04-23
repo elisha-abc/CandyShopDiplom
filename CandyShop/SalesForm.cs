@@ -25,11 +25,14 @@ namespace CandyShop
             dgvSales.AllowUserToAddRows = false;
             dgvSales.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvSales.RowHeadersVisible = false;
+            dgvSales.AutoGenerateColumns = true;
 
             cmbProduct.DropDownStyle = ComboBoxStyle.DropDownList;
 
             LoadProducts();
             LoadSales();
+
+            lblStockValue.Text = "0";
         }
 
         private void LoadProducts()
@@ -82,6 +85,8 @@ namespace CandyShop
                     DataTable table = new DataTable();
                     adapter.Fill(table);
 
+                    dgvSales.DataSource = null;
+                    dgvSales.Columns.Clear();
                     dgvSales.DataSource = table;
 
                     if (dgvSales.Columns["Id"] != null)
@@ -144,6 +149,26 @@ namespace CandyShop
                     command.Parameters.AddWithValue("@ProductId", productId);
                     return Convert.ToInt32(command.ExecuteScalar());
                 }
+            }
+        }
+
+        private void UpdateStockLabel()
+        {
+            try
+            {
+                if (cmbProduct.SelectedIndex == -1 || cmbProduct.SelectedValue == null)
+                {
+                    lblStockValue.Text = "0";
+                    return;
+                }
+
+                int productId = Convert.ToInt32(cmbProduct.SelectedValue);
+                int stock = GetStockQuantity(productId);
+                lblStockValue.Text = stock.ToString();
+            }
+            catch
+            {
+                lblStockValue.Text = "0";
             }
         }
 
@@ -218,6 +243,7 @@ namespace CandyShop
                 }
 
                 LoadSales();
+                UpdateStockLabel();
                 ClearFields();
             }
             catch (Exception ex)
@@ -308,12 +334,18 @@ namespace CandyShop
             }
         }
 
+        private void cmbProduct_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateStockLabel();
+        }
+
         private void ClearFields()
         {
             cmbProduct.SelectedIndex = -1;
             txtQuantity.Clear();
             selectedSaleId = -1;
             dtpSaleDate.Value = DateTime.Now;
+            lblStockValue.Text = "0";
         }
     }
 }

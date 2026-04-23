@@ -38,16 +38,14 @@
             label2 = new Label();
             label1 = new Label();
             dgvSales = new DataGridView();
-            colId = new DataGridViewTextBoxColumn();
-            colProduct = new DataGridViewTextBoxColumn();
-            colQuantity = new DataGridViewTextBoxColumn();
-            colSaleDate = new DataGridViewTextBoxColumn();
+            label4 = new Label();
+            lblStockValue = new Label();
             ((System.ComponentModel.ISupportInitialize)dgvSales).BeginInit();
             SuspendLayout();
             // 
             // dtpSaleDate
             // 
-            dtpSaleDate.Location = new Point(153, 93);
+            dtpSaleDate.Location = new Point(153, 127);
             dtpSaleDate.Name = "dtpSaleDate";
             dtpSaleDate.Size = new Size(318, 23);
             dtpSaleDate.TabIndex = 24;
@@ -66,6 +64,7 @@
             cmbProduct.Name = "cmbProduct";
             cmbProduct.Size = new Size(318, 23);
             cmbProduct.TabIndex = 22;
+            cmbProduct.SelectedIndexChanged += cmbProduct_SelectedIndexChanged;
             // 
             // BtnClear
             // 
@@ -100,7 +99,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(38, 99);
+            label3.Location = new Point(38, 133);
             label3.Name = "label3";
             label3.Size = new Size(87, 15);
             label3.TabIndex = 15;
@@ -127,39 +126,37 @@
             // dgvSales
             // 
             dgvSales.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvSales.Columns.AddRange(new DataGridViewColumn[] { colId, colProduct, colQuantity, colSaleDate });
             dgvSales.Location = new Point(19, 241);
             dgvSales.Name = "dgvSales";
             dgvSales.Size = new Size(762, 198);
             dgvSales.TabIndex = 25;
             dgvSales.CellClick += dgvSales_CellClick;
             // 
-            // colId
+            // label4
             // 
-            colId.HeaderText = "Id";
-            colId.Name = "colId";
-            colId.Visible = false;
+            label4.AutoSize = true;
+            label4.Location = new Point(37, 91);
+            label4.Name = "label4";
+            label4.Size = new Size(110, 15);
+            label4.TabIndex = 27;
+            label4.Text = "Остаток на складе:";
             // 
-            // colProduct
+            // lblStockValue
             // 
-            colProduct.HeaderText = "Товар";
-            colProduct.Name = "colProduct";
-            // 
-            // colQuantity
-            // 
-            colQuantity.HeaderText = "Количество";
-            colQuantity.Name = "colQuantity";
-            // 
-            // colSaleDate
-            // 
-            colSaleDate.HeaderText = "Дата продажи";
-            colSaleDate.Name = "colSaleDate";
+            lblStockValue.AutoSize = true;
+            lblStockValue.Location = new Point(153, 91);
+            lblStockValue.Name = "lblStockValue";
+            lblStockValue.Size = new Size(13, 15);
+            lblStockValue.TabIndex = 28;
+            lblStockValue.Text = "0";
             // 
             // SalesForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(lblStockValue);
+            Controls.Add(label4);
             Controls.Add(dgvSales);
             Controls.Add(dtpSaleDate);
             Controls.Add(txtQuantity);
@@ -190,9 +187,7 @@
         private Label label2;
         private Label label1;
         private DataGridView dgvSales;
-        private DataGridViewTextBoxColumn colId;
-        private DataGridViewTextBoxColumn colProduct;
-        private DataGridViewTextBoxColumn colQuantity;
-        private DataGridViewTextBoxColumn colSaleDate;
+        private Label label4;
+        private Label lblStockValue;
     }
 }
