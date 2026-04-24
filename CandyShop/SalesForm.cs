@@ -267,7 +267,7 @@ namespace CandyShop
             }
 
             DialogResult result = MessageBox.Show(
-                "Удалить выбранную продажу?",
+                "Удалить выбранную продажу? Количество товара будет возвращено на склад.",
                 "Подтверждение",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -280,26 +280,80 @@ namespace CandyShop
                 using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
+                    SqlTransaction transaction = connection.BeginTransaction();
 
-                    string query = "DELETE FROM Sales WHERE Id = @Id";
-                    using (SqlCommand command = new SqlCommand(query, connection))
+                    try
                     {
-                        command.Parameters.AddWithValue("@Id", selectedSaleId);
-                        command.ExecuteNonQuery();
+                        int productId;
+                        int quantity;
+
+                        string getSaleQuery = "SELECT ProductId, Quantity FROM Sales WHERE Id = @Id";
+
+                        using (SqlCommand getSaleCommand = new SqlCommand(getSaleQuery, connection, transaction))
+                        {
+                            getSaleCommand.Parameters.AddWithValue("@Id", selectedSaleId);
+
+                            using (SqlDataReader reader = getSaleCommand.ExecuteReader())
+                            {
+                                if (!reader.Read())
+                                {
+                                    MessageBox.Show("Продажа не найдена.",
+                                        "Ошибка",
+                                        MessageBoxButtons.OK,
+                                        MessageBoxIcon.Warning);
+                                    return;
+                                }
+
+                                productId = Convert.ToInt32(reader["ProductId"]);
+                                quantity = Convert.ToInt32(reader["Quantity"]);
+                            }
+                        }
+
+                        string deleteSaleQuery = "DELETE FROM Sales WHERE Id = @Id";
+
+                        using (SqlCommand deleteCommand = new SqlCommand(deleteSaleQuery, connection, transaction))
+                        {
+                            deleteCommand.Parameters.AddWithValue("@Id", selectedSaleId);
+                            deleteCommand.ExecuteNonQuery();
+                        }
+
+                        string returnToWarehouseQuery = @"
+                    UPDATE Warehouse
+                    SET Quantity = Quantity + @Quantity
+                    WHERE ProductId = @ProductId";
+
+                        using (SqlCommand warehouseCommand = new SqlCommand(returnToWarehouseQuery, connection, transaction))
+                        {
+                            warehouseCommand.Parameters.AddWithValue("@Quantity", quantity);
+                            warehouseCommand.Parameters.AddWithValue("@ProductId", productId);
+                            warehouseCommand.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+
+                        MessageBox.Show("Продажа удалена, товар возвращён на склад.",
+                            "Успех",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+
+                        MessageBox.Show("Ошибка удаления продажи: " + ex.Message,
+                            "Ошибка",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        return;
                     }
                 }
-
-                MessageBox.Show("Продажа удалена.",
-                    "Успех",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
 
                 LoadSales();
                 ClearFields();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка удаления продажи: " + ex.Message,
+                MessageBox.Show("Ошибка подключения к БД: " + ex.Message,
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
