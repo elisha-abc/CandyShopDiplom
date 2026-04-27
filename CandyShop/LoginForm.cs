@@ -53,6 +53,9 @@ namespace CandyShop
                         {
                             string role = result.ToString();
 
+                            Session.CurrentLogin = login;
+                            Session.CurrentRole = role;
+
                             MainForm mainForm = new MainForm(role);
                             mainForm.Show();
                             this.Hide();

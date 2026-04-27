@@ -3,6 +3,7 @@ using System.Data;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
 
+
 namespace CandyShop
 {
     public partial class ProductsForm : Form
@@ -270,8 +271,8 @@ namespace CandyShop
                     connection.Open();
 
                     string query = @"
-                        INSERT INTO Products (Name, CategoryId, SupplierId, Price, Unit)
-                        VALUES (@Name, @CategoryId, @SupplierId, @Price, @Unit)";
+                INSERT INTO Products (Name, CategoryId, SupplierId, Price, Unit)
+                VALUES (@Name, @CategoryId, @SupplierId, @Price, @Unit)";
 
                     using (SqlCommand command = new SqlCommand(query, connection))
                     {
@@ -284,6 +285,8 @@ namespace CandyShop
                         command.ExecuteNonQuery();
                     }
                 }
+
+                Logger.Add("Добавлен товар: " + txtName.Text.Trim());
 
                 MessageBox.Show("Товар успешно добавлен.",
                     "Успех",
@@ -341,8 +344,11 @@ namespace CandyShop
                         command.Parameters.AddWithValue("@Id", selectedProductId);
 
                         command.ExecuteNonQuery();
+
                     }
                 }
+
+                Logger.Add("Изменен товар: " + txtName.Text.Trim());
 
                 MessageBox.Show("Товар успешно изменён.",
                     "Успех",
@@ -426,6 +432,8 @@ namespace CandyShop
                         command.ExecuteNonQuery();
                     }
                 }
+
+                Logger.Add("Удален товар ID: " + selectedProductId);
 
                 MessageBox.Show("Товар успешно удалён.",
                     "Успех",

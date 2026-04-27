@@ -27,6 +27,7 @@ namespace CandyShop
                 btnSuppliers.Visible = false;
                 btnUsers.Visible = false;
                 btnReports.Visible = false;
+                btnLogs.Visible = false;
             }
         }
 
@@ -75,6 +76,12 @@ namespace CandyShop
         private void btnReports_Click(object sender, EventArgs e)
         {
             ReportsForm form = new ReportsForm();
+            form.ShowDialog();
+        }
+
+        private void btnLogs_Click(object sender, EventArgs e)
+        {
+            LogsForm form = new LogsForm();
             form.ShowDialog();
         }
 

@@ -38,6 +38,7 @@
             btnExpiry = new Button();
             btnReports = new Button();
             btnExit = new Button();
+            btnLogs = new Button();
             SuspendLayout();
             // 
             // lblTitle
@@ -139,11 +140,22 @@
             btnExit.UseVisualStyleBackColor = true;
             btnExit.Click += btnExit_Click;
             // 
+            // btnLogs
+            // 
+            btnLogs.Location = new Point(516, 53);
+            btnLogs.Name = "btnLogs";
+            btnLogs.Size = new Size(177, 41);
+            btnLogs.TabIndex = 10;
+            btnLogs.Text = "Журнал действий";
+            btnLogs.UseVisualStyleBackColor = true;
+            btnLogs.Click += btnLogs_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(734, 450);
+            Controls.Add(btnLogs);
             Controls.Add(btnExit);
             Controls.Add(btnReports);
             Controls.Add(btnExpiry);
@@ -173,5 +185,6 @@
         private Button btnExpiry;
         private Button btnReports;
         private Button btnExit;
+        private Button btnLogs;
     }
 }
