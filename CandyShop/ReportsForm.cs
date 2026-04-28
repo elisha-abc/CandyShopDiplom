@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
 
@@ -16,12 +17,13 @@ namespace CandyShop
             this.Text = "Отчеты";
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            dgvReports.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dgvReports.RowHeadersVisible = false;
-            dgvReports.ReadOnly = true;
-            dgvReports.AllowUserToAddRows = false;
             dgvReports.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvReports.MultiSelect = false;
+            dgvReports.ReadOnly = true;
+            dgvReports.AllowUserToAddRows = false;
+            dgvReports.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvReports.RowHeadersVisible = false;
+            dgvReports.AutoGenerateColumns = true;
 
             dtpDateFrom.Value = DateTime.Now.AddMonths(-1);
             dtpDateTo.Value = DateTime.Now;
@@ -31,60 +33,65 @@ namespace CandyShop
 
         private void LoadReport()
         {
-            dgvReports.Rows.Clear();
-
-            int totalSales = 0;
-            decimal totalRevenue = 0;
-
-            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
+                dgvReports.DataSource = null;
+                dgvReports.Columns.Clear();
 
-                string query = @"
-                    SELECT 
-                        p.Name AS ProductName,
-                        SUM(s.Quantity) AS TotalQuantity,
-                        SUM(s.Quantity * p.Price) AS TotalRevenue
-                    FROM Sales s
-                    JOIN Products p ON s.ProductId = p.Id
-                    WHERE s.SaleDate BETWEEN @dateFrom AND @dateTo
-                    GROUP BY p.Name
-                    ORDER BY TotalQuantity DESC";
+                int totalQuantity = 0;
+                decimal totalRevenue = 0;
 
-                using (SqlCommand cmd = new SqlCommand(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@dateFrom", dtpDateFrom.Value.Date);
-                    cmd.Parameters.AddWithValue("@dateTo", dtpDateTo.Value.Date);
+                    connection.Open();
 
-                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    string query = @"
+                        SELECT 
+                            p.Name AS [Товар],
+                            SUM(s.Quantity) AS [Продано],
+                            SUM(s.Quantity * p.Price) AS [Выручка]
+                        FROM Sales s
+                        JOIN Products p ON s.ProductId = p.Id
+                        WHERE s.SaleDate BETWEEN @DateFrom AND @DateTo
+                        GROUP BY p.Name
+                        ORDER BY SUM(s.Quantity) DESC";
+
+                    using (SqlCommand command = new SqlCommand(query, connection))
                     {
-                        while (reader.Read())
+                        command.Parameters.AddWithValue("@DateFrom", dtpDateFrom.Value.Date);
+                        command.Parameters.AddWithValue("@DateTo", dtpDateTo.Value.Date);
+
+                        SqlDataAdapter adapter = new SqlDataAdapter(command);
+                        DataTable table = new DataTable();
+                        adapter.Fill(table);
+
+                        dgvReports.DataSource = table;
+
+                        foreach (DataRow row in table.Rows)
                         {
-                            int quantity = Convert.ToInt32(reader["TotalQuantity"]);
-                            decimal revenue = Convert.ToDecimal(reader["TotalRevenue"]);
-
-                            dgvReports.Rows.Add(
-                                reader["ProductName"],
-                                quantity,
-                                revenue.ToString("0.00")
-                            );
-
-                            totalSales += quantity;
-                            totalRevenue += revenue;
+                            totalQuantity += Convert.ToInt32(row["Продано"]);
+                            totalRevenue += Convert.ToDecimal(row["Выручка"]);
                         }
                     }
                 }
-            }
 
-            lblTotalSalesValue.Text = totalSales.ToString();
-            lblTotalRevenueValue.Text = totalRevenue.ToString("0.00") + " руб.";
+                lblTotalSalesValue.Text = totalQuantity.ToString();
+                lblTotalRevenueValue.Text = totalRevenue.ToString("0.00") + " руб.";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка загрузки отчета: " + ex.Message,
+                    "Ошибка",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void btnLoadReport_Click(object sender, EventArgs e)
         {
             if (dtpDateFrom.Value.Date > dtpDateTo.Value.Date)
             {
-                MessageBox.Show("Дата 'с' не может быть больше даты 'по'.",
+                MessageBox.Show("Дата начала не может быть больше даты окончания.",
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -92,6 +99,7 @@ namespace CandyShop
             }
 
             LoadReport();
+            Logger.Add("Сформирован отчет по продажам");
         }
 
         private void btnClearReport_Click(object sender, EventArgs e)
@@ -99,7 +107,9 @@ namespace CandyShop
             dtpDateFrom.Value = DateTime.Now.AddMonths(-1);
             dtpDateTo.Value = DateTime.Now;
 
-            dgvReports.Rows.Clear();
+            dgvReports.DataSource = null;
+            dgvReports.Columns.Clear();
+
             lblTotalSalesValue.Text = "0";
             lblTotalRevenueValue.Text = "0 руб.";
         }
