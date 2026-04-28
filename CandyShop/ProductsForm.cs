@@ -146,19 +146,23 @@ namespace CandyShop
                     connection.Open();
 
                     string query = @"
-                        SELECT 
-                            p.Id,
-                            p.Name AS [Название],
-                            c.Name AS [Категория],
-                            s.Name AS [Поставщик],
-                            p.Price AS [Цена],
-                            p.Unit AS [Ед. изм.]
-                        FROM Products p
-                        LEFT JOIN Categories c ON p.CategoryId = c.Id
-                        LEFT JOIN Suppliers s ON p.SupplierId = s.Id
-                        WHERE (@search = '' OR p.Name LIKE '%' + @search + '%')
-                          AND (@cat = 0 OR p.CategoryId = @cat)
-                        ORDER BY p.Name";
+                SELECT 
+                    p.Id,
+                    p.Name AS [Название],
+                    c.Name AS [Категория],
+                    s.Name AS [Поставщик],
+                    p.Price AS [Цена],
+                    p.Unit AS [Ед. изм.],
+                    ISNULL(SUM(w.Quantity), 0) AS [Остаток]
+                FROM Products p
+                LEFT JOIN Categories c ON p.CategoryId = c.Id
+                LEFT JOIN Suppliers s ON p.SupplierId = s.Id
+                LEFT JOIN Warehouse w ON p.Id = w.ProductId
+                WHERE (@search = '' OR p.Name LIKE '%' + @search + '%')
+                  AND (@cat = 0 OR p.CategoryId = @cat)
+                GROUP BY 
+                    p.Id, p.Name, c.Name, s.Name, p.Price, p.Unit
+                ORDER BY p.Name";
 
                     SqlCommand cmd = new SqlCommand(query, connection);
                     cmd.Parameters.AddWithValue("@search", search);
@@ -172,6 +176,8 @@ namespace CandyShop
 
                     if (dgvProducts.Columns["Id"] != null)
                         dgvProducts.Columns["Id"].Visible = false;
+
+                    HighlightLowStock();
                 }
             }
             catch (Exception ex)
@@ -180,6 +186,30 @@ namespace CandyShop
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
+
+        private void HighlightLowStock()
+        {
+            foreach (DataGridViewRow row in dgvProducts.Rows)
+            {
+                if (row.Cells["Остаток"].Value == null)
+                    continue;
+
+                int stock = Convert.ToInt32(row.Cells["Остаток"].Value);
+
+                if (stock == 0)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightCoral;
+                }
+                else if (stock <= 5)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightYellow;
+                }
+                else
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.White;
+                }
             }
         }
 
