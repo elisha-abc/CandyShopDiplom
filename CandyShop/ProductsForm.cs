@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Windows.Forms;
+using ExcelDataReader;
+using System.IO;
+using System.Text;
 using Microsoft.Data.SqlClient;
-
 
 namespace CandyShop
 {
@@ -13,6 +15,9 @@ namespace CandyShop
         public ProductsForm()
         {
             InitializeComponent();
+
+            
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
         private void ProductsForm_Load(object sender, EventArgs e)
@@ -39,6 +44,69 @@ namespace CandyShop
             LoadProducts();
         }
 
+        
+
+        private void btnImportExcel_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Excel Files|*.xlsx;*.xls;*.csv";
+
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                using (var stream = File.Open(ofd.FileName, FileMode.Open, FileAccess.Read))
+                {
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        var result = reader.AsDataSet();
+                        DataTable table = result.Tables[0];
+
+                        using (SqlConnection connection = DatabaseHelper.GetConnection())
+                        {
+                            connection.Open();
+
+                            for (int i = 1; i < table.Rows.Count; i++) // пропускаем заголовок
+                            {
+                                var row = table.Rows[i];
+
+                                string name = row[0].ToString();
+                                int categoryId = Convert.ToInt32(row[1]);
+                                int supplierId = Convert.ToInt32(row[2]);
+                                decimal price = Convert.ToDecimal(row[3]);
+                                string unit = row[4].ToString();
+
+                                string query = @"
+IF NOT EXISTS (SELECT 1 FROM Products WHERE Name = @Name)
+BEGIN
+    INSERT INTO Products (Name, CategoryId, SupplierId, Price, Unit)
+    VALUES (@Name, @CategoryId, @SupplierId, @Price, @Unit)
+END";
+
+                                using (SqlCommand cmd = new SqlCommand(query, connection))
+                                {
+                                    cmd.Parameters.AddWithValue("@Name", name);
+                                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+                                    cmd.Parameters.AddWithValue("@SupplierId", supplierId);
+                                    cmd.Parameters.AddWithValue("@Price", price);
+                                    cmd.Parameters.AddWithValue("@Unit", unit);
+
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                MessageBox.Show("Импорт завершён!");
+                LoadProducts();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка импорта: " + ex.Message);
+            }
+        }
         private void LoadCategories()
         {
             try
