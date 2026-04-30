@@ -37,15 +37,11 @@
             btnDelete = new Button();
             BtnClear = new Button();
             dgvWarehouse = new DataGridView();
-            colld = new DataGridViewTextBoxColumn();
-            colProduct = new DataGridViewTextBoxColumn();
-            colQuantity = new DataGridViewTextBoxColumn();
-            colReceipt = new DataGridViewTextBoxColumn();
-            colExpiry = new DataGridViewTextBoxColumn();
             cmbProduct = new ComboBox();
             txtQuantity = new TextBox();
             dtpReceiptDate = new DateTimePicker();
             dtpExpiryDate = new DateTimePicker();
+            btnImportWarehouse = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvWarehouse).BeginInit();
             SuspendLayout();
             // 
@@ -128,38 +124,11 @@
             // dgvWarehouse
             // 
             dgvWarehouse.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvWarehouse.Columns.AddRange(new DataGridViewColumn[] { colld, colProduct, colQuantity, colReceipt, colExpiry });
             dgvWarehouse.Location = new Point(18, 242);
             dgvWarehouse.Name = "dgvWarehouse";
             dgvWarehouse.Size = new Size(772, 200);
             dgvWarehouse.TabIndex = 8;
             dgvWarehouse.CellClick += dgvWarehouse_CellClick;
-            // 
-            // colld
-            // 
-            colld.HeaderText = "Id";
-            colld.Name = "colld";
-            colld.Visible = false;
-            // 
-            // colProduct
-            // 
-            colProduct.HeaderText = "Товар";
-            colProduct.Name = "colProduct";
-            // 
-            // colQuantity
-            // 
-            colQuantity.HeaderText = "Количество ";
-            colQuantity.Name = "colQuantity";
-            // 
-            // colReceipt
-            // 
-            colReceipt.HeaderText = "Дата поступления";
-            colReceipt.Name = "colReceipt";
-            // 
-            // colExpiry
-            // 
-            colExpiry.HeaderText = "Срок годности";
-            colExpiry.Name = "colExpiry";
             // 
             // cmbProduct
             // 
@@ -190,11 +159,22 @@
             dtpExpiryDate.Size = new Size(318, 23);
             dtpExpiryDate.TabIndex = 12;
             // 
+            // btnImportWarehouse
+            // 
+            btnImportWarehouse.Location = new Point(534, 62);
+            btnImportWarehouse.Name = "btnImportWarehouse";
+            btnImportWarehouse.Size = new Size(219, 74);
+            btnImportWarehouse.TabIndex = 13;
+            btnImportWarehouse.Text = "Импорт поступления";
+            btnImportWarehouse.UseVisualStyleBackColor = true;
+            btnImportWarehouse.Click += btnImportWarehouse_Click;
+            // 
             // WarehouseForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnImportWarehouse);
             Controls.Add(dtpExpiryDate);
             Controls.Add(dtpReceiptDate);
             Controls.Add(txtQuantity);
@@ -231,10 +211,6 @@
         private TextBox txtQuantity;
         private DateTimePicker dtpReceiptDate;
         private DateTimePicker dtpExpiryDate;
-        private DataGridViewTextBoxColumn colld;
-        private DataGridViewTextBoxColumn colProduct;
-        private DataGridViewTextBoxColumn colQuantity;
-        private DataGridViewTextBoxColumn colReceipt;
-        private DataGridViewTextBoxColumn colExpiry;
+        private Button btnImportWarehouse;
     }
 }

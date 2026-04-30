@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Windows.Forms;
 using Microsoft.Data.SqlClient;
 
@@ -29,163 +30,230 @@ namespace CandyShop
             LoadWarehouse();
         }
 
-        
         private void LoadProducts()
         {
-            cmbProduct.Items.Clear();
-
-            using (var connection = DatabaseHelper.GetConnection())
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
             {
                 connection.Open();
 
-                string query = "SELECT Id, Name FROM Products";
+                string query = "SELECT Id, Name FROM Products ORDER BY Name";
 
-                using (var cmd = new SqlCommand(query, connection))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        cmbProduct.Items.Add(new
-                        {
-                            Id = reader["Id"],
-                            Name = reader["Name"].ToString()
-                        });
-                    }
-                }
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+
+                cmbProduct.DataSource = table;
+                cmbProduct.DisplayMember = "Name";
+                cmbProduct.ValueMember = "Id";
+                cmbProduct.SelectedIndex = -1;
             }
-
-            cmbProduct.DisplayMember = "Name";
-            cmbProduct.ValueMember = "Id";
         }
 
-        // Загрузка склада
         private void LoadWarehouse()
         {
-            dgvWarehouse.Rows.Clear();
-
-            using (var connection = DatabaseHelper.GetConnection())
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
             {
                 connection.Open();
 
                 string query = @"
-                    SELECT w.Id, p.Name, w.Quantity, w.ReceiptDate, w.ExpiryDate
+                    SELECT 
+                        w.Id,
+                        p.Name AS [Товар],
+                        w.Quantity AS [Количество],
+                        w.ReceiptDate AS [Дата поступления],
+                        w.ExpiryDate AS [Срок годности]
                     FROM Warehouse w
-                    JOIN Products p ON w.ProductId = p.Id";
+                    JOIN Products p ON w.ProductId = p.Id
+                    ORDER BY p.Name";
 
-                using (var cmd = new SqlCommand(query, connection))
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        dgvWarehouse.Rows.Add(
-                            reader["Id"],
-                            reader["Name"],
-                            reader["Quantity"],
-                            Convert.ToDateTime(reader["ReceiptDate"]).ToShortDateString(),
-                            Convert.ToDateTime(reader["ExpiryDate"]).ToShortDateString()
-                        );
-                    }
-                }
+                SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+                DataTable table = new DataTable();
+                adapter.Fill(table);
+
+                dgvWarehouse.DataSource = table;
+
+                if (dgvWarehouse.Columns["Id"] != null)
+                    dgvWarehouse.Columns["Id"].Visible = false;
             }
+        }
+
+        private bool ValidateInputs()
+        {
+            if (cmbProduct.SelectedIndex == -1)
+            {
+                MessageBox.Show("Выберите товар.");
+                return false;
+            }
+
+            if (!int.TryParse(txtQuantity.Text.Trim(), out int quantity) || quantity <= 0)
+            {
+                MessageBox.Show("Введите корректное количество больше 0.");
+                return false;
+            }
+
+            if (dtpExpiryDate.Value.Date < dtpReceiptDate.Value.Date)
+            {
+                MessageBox.Show("Срок годности не может быть раньше даты поступления.");
+                return false;
+            }
+
+            return true;
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            if (cmbProduct.SelectedItem == null || string.IsNullOrWhiteSpace(txtQuantity.Text))
-            {
-                MessageBox.Show("Заполните все поля");
+            if (!ValidateInputs())
                 return;
-            }
 
-            int productId = (int)cmbProduct.SelectedValue;
-            int quantity = int.Parse(txtQuantity.Text);
+            int productId = Convert.ToInt32(cmbProduct.SelectedValue);
+            int quantity = int.Parse(txtQuantity.Text.Trim());
 
-            using (var connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
-
-                string query = @"
-                    INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
-                    VALUES (@p, @q, @r, @e)";
-
-                using (var cmd = new SqlCommand(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@p", productId);
-                    cmd.Parameters.AddWithValue("@q", quantity);
-                    cmd.Parameters.AddWithValue("@r", dtpReceiptDate.Value);
-                    cmd.Parameters.AddWithValue("@e", dtpExpiryDate.Value);
+                    connection.Open();
 
-                    cmd.ExecuteNonQuery();
+                    string query = @"
+                        IF EXISTS (
+                            SELECT 1 
+                            FROM Warehouse 
+                            WHERE ProductId = @ProductId 
+                              AND ExpiryDate = @ExpiryDate
+                        )
+                        BEGIN
+                            UPDATE Warehouse
+                            SET Quantity = Quantity + @Quantity,
+                                ReceiptDate = @ReceiptDate
+                            WHERE ProductId = @ProductId 
+                              AND ExpiryDate = @ExpiryDate
+                        END
+                        ELSE
+                        BEGIN
+                            INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
+                            VALUES (@ProductId, @Quantity, @ReceiptDate, @ExpiryDate)
+                        END";
+
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@ProductId", productId);
+                        cmd.Parameters.AddWithValue("@Quantity", quantity);
+                        cmd.Parameters.AddWithValue("@ReceiptDate", dtpReceiptDate.Value.Date);
+                        cmd.Parameters.AddWithValue("@ExpiryDate", dtpExpiryDate.Value.Date);
+
+                        cmd.ExecuteNonQuery();
+                    }
                 }
-            }
 
-            LoadWarehouse();
-            ClearFields();
+                Logger.Add("Добавлено поступление товара на склад. Количество: " + quantity);
+
+                LoadWarehouse();
+                ClearFields();
+
+                MessageBox.Show("Поступление успешно добавлено.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка добавления на склад: " + ex.Message);
+            }
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
             if (selectedId == -1)
             {
-                MessageBox.Show("Выберите запись");
+                MessageBox.Show("Выберите запись.");
                 return;
             }
 
-            int productId = (int)cmbProduct.SelectedValue;
-            int quantity = int.Parse(txtQuantity.Text);
+            if (!ValidateInputs())
+                return;
 
-            using (var connection = DatabaseHelper.GetConnection())
+            int productId = Convert.ToInt32(cmbProduct.SelectedValue);
+            int quantity = int.Parse(txtQuantity.Text.Trim());
+
+            try
             {
-                connection.Open();
-
-                string query = @"
-                    UPDATE Warehouse 
-                    SET ProductId=@p, Quantity=@q, ReceiptDate=@r, ExpiryDate=@e
-                    WHERE Id=@id";
-
-                using (var cmd = new SqlCommand(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@p", productId);
-                    cmd.Parameters.AddWithValue("@q", quantity);
-                    cmd.Parameters.AddWithValue("@r", dtpReceiptDate.Value);
-                    cmd.Parameters.AddWithValue("@e", dtpExpiryDate.Value);
-                    cmd.Parameters.AddWithValue("@id", selectedId);
+                    connection.Open();
 
-                    cmd.ExecuteNonQuery();
+                    string query = @"
+                        UPDATE Warehouse 
+                        SET ProductId = @ProductId,
+                            Quantity = @Quantity,
+                            ReceiptDate = @ReceiptDate,
+                            ExpiryDate = @ExpiryDate
+                        WHERE Id = @Id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@ProductId", productId);
+                        cmd.Parameters.AddWithValue("@Quantity", quantity);
+                        cmd.Parameters.AddWithValue("@ReceiptDate", dtpReceiptDate.Value.Date);
+                        cmd.Parameters.AddWithValue("@ExpiryDate", dtpExpiryDate.Value.Date);
+                        cmd.Parameters.AddWithValue("@Id", selectedId);
+
+                        cmd.ExecuteNonQuery();
+                    }
                 }
-            }
 
-            LoadWarehouse();
-            ClearFields();
+                Logger.Add("Изменена запись склада ID: " + selectedId);
+
+                LoadWarehouse();
+                ClearFields();
+
+                MessageBox.Show("Запись склада успешно изменена.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка изменения склада: " + ex.Message);
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (selectedId == -1)
             {
-                MessageBox.Show("Выберите запись");
+                MessageBox.Show("Выберите запись.");
                 return;
             }
 
-            if (MessageBox.Show("Удалить?", "Подтверждение",
-                MessageBoxButtons.YesNo) == DialogResult.No)
+            DialogResult result = MessageBox.Show(
+                "Удалить выбранную запись склада?",
+                "Подтверждение",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
                 return;
 
-            using (var connection = DatabaseHelper.GetConnection())
+            try
             {
-                connection.Open();
-
-                string query = "DELETE FROM Warehouse WHERE Id=@id";
-
-                using (var cmd = new SqlCommand(query, connection))
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@id", selectedId);
-                    cmd.ExecuteNonQuery();
-                }
-            }
+                    connection.Open();
 
-            LoadWarehouse();
-            ClearFields();
+                    string query = "DELETE FROM Warehouse WHERE Id = @Id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", selectedId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                Logger.Add("Удалена запись склада ID: " + selectedId);
+
+                LoadWarehouse();
+                ClearFields();
+
+                MessageBox.Show("Запись склада удалена.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка удаления склада: " + ex.Message);
+            }
         }
 
         private void dgvWarehouse_CellClick(object sender, DataGridViewCellEventArgs e)
@@ -193,13 +261,13 @@ namespace CandyShop
             if (e.RowIndex < 0)
                 return;
 
-            var row = dgvWarehouse.Rows[e.RowIndex];
+            DataGridViewRow row = dgvWarehouse.Rows[e.RowIndex];
 
             selectedId = Convert.ToInt32(row.Cells["Id"].Value);
-            txtQuantity.Text = row.Cells["Quantity"].Value.ToString();
+            txtQuantity.Text = row.Cells["Количество"].Value.ToString();
 
-            dtpReceiptDate.Value = Convert.ToDateTime(row.Cells["ReceiptDate"].Value);
-            dtpExpiryDate.Value = Convert.ToDateTime(row.Cells["ExpiryDate"].Value);
+            dtpReceiptDate.Value = Convert.ToDateTime(row.Cells["Дата поступления"].Value);
+            dtpExpiryDate.Value = Convert.ToDateTime(row.Cells["Срок годности"].Value);
 
             cmbProduct.Text = row.Cells["Товар"].Value.ToString();
         }
@@ -209,11 +277,70 @@ namespace CandyShop
             ClearFields();
         }
 
+        private void btnImportWarehouse_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "Excel/CSV Files|*.xlsx;*.xls;*.csv";
+
+            if (ofd.ShowDialog() != DialogResult.OK)
+                return;
+
+            try
+            {
+                string[] lines = System.IO.File.ReadAllLines(ofd.FileName, System.Text.Encoding.UTF8);
+
+                using (SqlConnection connection = DatabaseHelper.GetConnection())
+                {
+                    connection.Open();
+
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        if (string.IsNullOrWhiteSpace(lines[i]))
+                            continue;
+
+                        string[] parts = lines[i].Split(';');
+
+                        string productName = parts[0].Trim();
+                        int quantity = int.Parse(parts[1].Trim());
+                        DateTime receiptDate = DateTime.Parse(parts[2].Trim());
+                        DateTime expiryDate = DateTime.Parse(parts[3].Trim());
+
+                        string query = @"
+                    INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
+                    SELECT Id, @Quantity, @ReceiptDate, @ExpiryDate
+                    FROM Products
+                    WHERE Name = @ProductName";
+
+                        using (SqlCommand cmd = new SqlCommand(query, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@ProductName", productName);
+                            cmd.Parameters.AddWithValue("@Quantity", quantity);
+                            cmd.Parameters.AddWithValue("@ReceiptDate", receiptDate.Date);
+                            cmd.Parameters.AddWithValue("@ExpiryDate", expiryDate.Date);
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        Logger.Add("Импорт поступления на склад: " + productName + ", количество: " + quantity);
+                    }
+                }
+
+                LoadWarehouse();
+                MessageBox.Show("Импорт поступлений завершён.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ошибка импорта поступлений: " + ex.Message);
+            }
+        }
+
         private void ClearFields()
         {
             txtQuantity.Clear();
             cmbProduct.SelectedIndex = -1;
             selectedId = -1;
+            dtpReceiptDate.Value = DateTime.Now;
+            dtpExpiryDate.Value = DateTime.Now;
         }
     }
 }
