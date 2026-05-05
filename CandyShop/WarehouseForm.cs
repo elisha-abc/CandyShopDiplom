@@ -280,7 +280,7 @@ namespace CandyShop
         private void btnImportWarehouse_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Excel/CSV Files|*.xlsx;*.xls;*.csv";
+            ofd.Filter = "CSV Files|*.csv";
 
             if (ofd.ShowDialog() != DialogResult.OK)
                 return;
@@ -300,37 +300,114 @@ namespace CandyShop
 
                         string[] parts = lines[i].Split(';');
 
-                        string productName = parts[0].Trim();
-                        int quantity = int.Parse(parts[1].Trim());
-                        DateTime receiptDate = DateTime.Parse(parts[2].Trim());
-                        DateTime expiryDate = DateTime.Parse(parts[3].Trim());
-
-                        string query = @"
-                    INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
-                    SELECT Id, @Quantity, @ReceiptDate, @ExpiryDate
-                    FROM Products
-                    WHERE Name = @ProductName";
-
-                        using (SqlCommand cmd = new SqlCommand(query, connection))
+                        if (parts.Length < 8)
                         {
-                            cmd.Parameters.AddWithValue("@ProductName", productName);
+                            MessageBox.Show("Ошибка в строке " + (i + 1) + ". Должно быть 8 колонок.");
+                            continue;
+                        }
+
+                        string productName = parts[0].Trim();
+                        string categoryName = parts[1].Trim();
+                        string supplierName = parts[2].Trim();
+                        decimal price = decimal.Parse(parts[3].Trim());
+                        string unit = parts[4].Trim();
+                        int quantity = int.Parse(parts[5].Trim());
+                        DateTime receiptDate = DateTime.Parse(parts[6].Trim());
+                        DateTime expiryDate = DateTime.Parse(parts[7].Trim());
+
+                        if (quantity <= 0)
+                        {
+                            MessageBox.Show("Ошибка в строке " + (i + 1) + ": количество должно быть больше 0.");
+                            continue;
+                        }
+
+                        if (expiryDate < receiptDate)
+                        {
+                            MessageBox.Show("Ошибка в строке " + (i + 1) + ": срок годности раньше даты поступления.");
+                            continue;
+                        }
+
+                        int categoryId;
+                        string categoryQuery = @"
+IF NOT EXISTS (SELECT 1 FROM Categories WHERE Name = @Name)
+    INSERT INTO Categories (Name) VALUES (@Name);
+
+SELECT Id FROM Categories WHERE Name = @Name;";
+
+                        using (SqlCommand cmd = new SqlCommand(categoryQuery, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@Name", categoryName);
+                            categoryId = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        int supplierId;
+                        string supplierQuery = @"
+IF NOT EXISTS (SELECT 1 FROM Suppliers WHERE Name = @Name)
+    INSERT INTO Suppliers (Name) VALUES (@Name);
+
+SELECT Id FROM Suppliers WHERE Name = @Name;";
+
+                        using (SqlCommand cmd = new SqlCommand(supplierQuery, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@Name", supplierName);
+                            supplierId = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        int productId;
+                        string productQuery = @"
+IF NOT EXISTS (SELECT 1 FROM Products WHERE Name = @Name)
+BEGIN
+    INSERT INTO Products (Name, CategoryId, SupplierId, Price, Unit)
+    VALUES (@Name, @CategoryId, @SupplierId, @Price, @Unit);
+END
+ELSE
+BEGIN
+    UPDATE Products
+    SET CategoryId = @CategoryId,
+        SupplierId = @SupplierId,
+        Price = @Price,
+        Unit = @Unit
+    WHERE Name = @Name;
+END
+
+SELECT Id FROM Products WHERE Name = @Name;";
+
+                        using (SqlCommand cmd = new SqlCommand(productQuery, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@Name", productName);
+                            cmd.Parameters.AddWithValue("@CategoryId", categoryId);
+                            cmd.Parameters.AddWithValue("@SupplierId", supplierId);
+                            cmd.Parameters.AddWithValue("@Price", price);
+                            cmd.Parameters.AddWithValue("@Unit", unit);
+
+                            productId = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        string warehouseQuery = @"
+INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
+VALUES (@ProductId, @Quantity, @ReceiptDate, @ExpiryDate);";
+
+                        using (SqlCommand cmd = new SqlCommand(warehouseQuery, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@ProductId", productId);
                             cmd.Parameters.AddWithValue("@Quantity", quantity);
                             cmd.Parameters.AddWithValue("@ReceiptDate", receiptDate.Date);
                             cmd.Parameters.AddWithValue("@ExpiryDate", expiryDate.Date);
-
                             cmd.ExecuteNonQuery();
                         }
 
-                        Logger.Add("Импорт поступления на склад: " + productName + ", количество: " + quantity);
+                        Logger.Add("Импорт поступления: " + productName + ", количество: " + quantity);
                     }
                 }
 
+                LoadProducts();
                 LoadWarehouse();
-                MessageBox.Show("Импорт поступлений завершён.");
+
+                MessageBox.Show("Импорт завершён.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Ошибка импорта поступлений: " + ex.Message);
+                MessageBox.Show("Ошибка импорта: " + ex.Message);
             }
         }
 

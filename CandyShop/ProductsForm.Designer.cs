@@ -50,7 +50,6 @@
             cmbFilterCategory = new ComboBox();
             btnSearch = new Button();
             btnResetFilter = new Button();
-            btnImportCsv = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvProducts).BeginInit();
             SuspendLayout();
             // 
@@ -249,22 +248,11 @@
             btnResetFilter.UseVisualStyleBackColor = true;
             btnResetFilter.Click += btnResetFilter_Click;
             // 
-            // btnImportCsv
-            // 
-            btnImportCsv.Location = new Point(499, 147);
-            btnImportCsv.Name = "btnImportCsv";
-            btnImportCsv.Size = new Size(448, 43);
-            btnImportCsv.TabIndex = 22;
-            btnImportCsv.Text = "Импорт из CSV";
-            btnImportCsv.UseVisualStyleBackColor = true;
-            btnImportCsv.Click += btnImportExcel_Click;
-            // 
             // ProductsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(984, 561);
-            Controls.Add(btnImportCsv);
             Controls.Add(btnResetFilter);
             Controls.Add(btnSearch);
             Controls.Add(cmbFilterCategory);
@@ -320,6 +308,5 @@
         private ComboBox cmbFilterCategory;
         private Button btnSearch;
         private Button btnResetFilter;
-        private Button btnImportCsv;
     }
 }

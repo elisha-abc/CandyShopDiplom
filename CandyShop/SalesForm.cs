@@ -143,7 +143,13 @@ namespace CandyShop
             {
                 connection.Open();
 
-                string query = "SELECT ISNULL(SUM(Quantity), 0) FROM Warehouse WHERE ProductId = @ProductId";
+                string query = @"
+            SELECT ISNULL(SUM(Quantity), 0)
+            FROM Warehouse
+            WHERE ProductId = @ProductId
+              AND Quantity > 0
+              AND ExpiryDate >= CAST(GETDATE() AS date)";
+
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@ProductId", productId);
@@ -151,7 +157,6 @@ namespace CandyShop
                 }
             }
         }
-
         private void UpdateStockLabel()
         {
             try
@@ -182,17 +187,6 @@ namespace CandyShop
 
             try
             {
-                int stockQuantity = GetStockQuantity(productId);
-
-                if (stockQuantity < quantity)
-                {
-                    MessageBox.Show("Недостаточно товара на складе.",
-                        "Ошибка",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning);
-                    return;
-                }
-
                 using (SqlConnection connection = DatabaseHelper.GetConnection())
                 {
                     connection.Open();
@@ -200,9 +194,35 @@ namespace CandyShop
 
                     try
                     {
+                        int availableQuantity = 0;
+
+                        string stockQuery = @"
+                    SELECT ISNULL(SUM(Quantity), 0)
+                    FROM Warehouse
+                    WHERE ProductId = @ProductId
+                      AND Quantity > 0
+                      AND ExpiryDate >= CAST(GETDATE() AS date)";
+
+                        using (SqlCommand cmd = new SqlCommand(stockQuery, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@ProductId", productId);
+                            availableQuantity = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        if (availableQuantity < quantity)
+                        {
+                            MessageBox.Show("Недостаточно непросроченного товара на складе.",
+                                "Ошибка",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+
+                            transaction.Rollback();
+                            return;
+                        }
+
                         string insertSaleQuery = @"
-                            INSERT INTO Sales (ProductId, Quantity, SaleDate)
-                            VALUES (@ProductId, @Quantity, @SaleDate)";
+                    INSERT INTO Sales (ProductId, Quantity, SaleDate)
+                    VALUES (@ProductId, @Quantity, @SaleDate)";
 
                         using (SqlCommand saleCommand = new SqlCommand(insertSaleQuery, connection, transaction))
                         {
@@ -212,19 +232,64 @@ namespace CandyShop
                             saleCommand.ExecuteNonQuery();
                         }
 
-                        string updateWarehouseQuery = @"
+                        int remainingToWriteOff = quantity;
+
+                        string batchesQuery = @"
+                    SELECT Id, Quantity
+                    FROM Warehouse
+                    WHERE ProductId = @ProductId
+                      AND Quantity > 0
+                      AND ExpiryDate >= CAST(GETDATE() AS date)
+                    ORDER BY ExpiryDate ASC, ReceiptDate ASC";
+
+                        using (SqlCommand batchCommand = new SqlCommand(batchesQuery, connection, transaction))
+                        {
+                            batchCommand.Parameters.AddWithValue("@ProductId", productId);
+
+                            DataTable batches = new DataTable();
+
+                            using (SqlDataAdapter adapter = new SqlDataAdapter(batchCommand))
+                            {
+                                adapter.Fill(batches);
+                            }
+
+                            foreach (DataRow row in batches.Rows)
+                            {
+                                if (remainingToWriteOff <= 0)
+                                    break;
+
+                                int warehouseId = Convert.ToInt32(row["Id"]);
+                                int batchQuantity = Convert.ToInt32(row["Quantity"]);
+
+                                int quantityFromBatch = Math.Min(batchQuantity, remainingToWriteOff);
+
+                                string updateBatchQuery = @"
                             UPDATE Warehouse
                             SET Quantity = Quantity - @Quantity
-                            WHERE ProductId = @ProductId";
+                            WHERE Id = @WarehouseId";
 
-                        using (SqlCommand warehouseCommand = new SqlCommand(updateWarehouseQuery, connection, transaction))
+                                using (SqlCommand updateCommand = new SqlCommand(updateBatchQuery, connection, transaction))
+                                {
+                                    updateCommand.Parameters.AddWithValue("@Quantity", quantityFromBatch);
+                                    updateCommand.Parameters.AddWithValue("@WarehouseId", warehouseId);
+                                    updateCommand.ExecuteNonQuery();
+                                }
+
+                                remainingToWriteOff -= quantityFromBatch;
+                            }
+                        }
+
+                        string deleteEmptyQuery = "DELETE FROM Warehouse WHERE Quantity <= 0";
+
+                        using (SqlCommand deleteCommand = new SqlCommand(deleteEmptyQuery, connection, transaction))
                         {
-                            warehouseCommand.Parameters.AddWithValue("@Quantity", quantity);
-                            warehouseCommand.Parameters.AddWithValue("@ProductId", productId);
-                            warehouseCommand.ExecuteNonQuery();
+                            deleteCommand.ExecuteNonQuery();
                         }
 
                         transaction.Commit();
+
+                        string productName = cmbProduct.Text;
+                        Logger.Add("Добавлена продажа: " + productName + ", количество: " + quantity);
 
                         MessageBox.Show("Продажа успешно добавлена.",
                             "Успех",
@@ -234,6 +299,7 @@ namespace CandyShop
                     catch (Exception ex)
                     {
                         transaction.Rollback();
+
                         MessageBox.Show("Ошибка при продаже: " + ex.Message,
                             "Ошибка",
                             MessageBoxButtons.OK,
@@ -254,7 +320,6 @@ namespace CandyShop
                     MessageBoxIcon.Error);
             }
         }
-
         private void btnDelete_Click(object sender, EventArgs e)
         {
             if (selectedSaleId < 0)

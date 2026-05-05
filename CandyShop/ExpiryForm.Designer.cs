@@ -36,6 +36,7 @@
             colQuantity = new DataGridViewTextBoxColumn();
             colExpiryDate = new DataGridViewTextBoxColumn();
             colDaysLeft = new DataGridViewTextBoxColumn();
+            btnWriteOff = new Button();
             ((System.ComponentModel.ISupportInitialize)numDays).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvExpiry).BeginInit();
             SuspendLayout();
@@ -58,7 +59,7 @@
             // 
             // btnLoad
             // 
-            btnLoad.Location = new Point(286, 91);
+            btnLoad.Location = new Point(140, 91);
             btnLoad.Name = "btnLoad";
             btnLoad.Size = new Size(186, 52);
             btnLoad.TabIndex = 2;
@@ -95,11 +96,22 @@
             colDaysLeft.HeaderText = "Осталось дней";
             colDaysLeft.Name = "colDaysLeft";
             // 
+            // btnWriteOff
+            // 
+            btnWriteOff.Location = new Point(455, 91);
+            btnWriteOff.Name = "btnWriteOff";
+            btnWriteOff.Size = new Size(186, 52);
+            btnWriteOff.TabIndex = 4;
+            btnWriteOff.Text = "Списать просроченные";
+            btnWriteOff.UseVisualStyleBackColor = true;
+            btnWriteOff.Click += btnWriteOff_Click;
+            // 
             // ExpiryForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnWriteOff);
             Controls.Add(dgvExpiry);
             Controls.Add(btnLoad);
             Controls.Add(numDays);
@@ -123,5 +135,7 @@
         private DataGridViewTextBoxColumn colQuantity;
         private DataGridViewTextBoxColumn colExpiryDate;
         private DataGridViewTextBoxColumn colDaysLeft;
+        private Button button1;
+        private Button btnWriteOff;
     }
 }
