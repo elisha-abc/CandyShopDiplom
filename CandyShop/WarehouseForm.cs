@@ -91,6 +91,12 @@ namespace CandyShop
                 return false;
             }
 
+            if (dtpReceiptDate.Value.Date > DateTime.Now.Date)
+            {
+                MessageBox.Show("Дата поступления не может быть в будущем.");
+                return false;
+            }
+
             if (dtpExpiryDate.Value.Date < dtpReceiptDate.Value.Date)
             {
                 MessageBox.Show("Срок годности не может быть раньше даты поступления.");
@@ -318,6 +324,12 @@ namespace CandyShop
                         if (quantity <= 0)
                         {
                             MessageBox.Show("Ошибка в строке " + (i + 1) + ": количество должно быть больше 0.");
+                            continue;
+                        }
+
+                        if (receiptDate.Date > DateTime.Now.Date)
+                        {
+                            MessageBox.Show("Ошибка в строке " + (i + 1) + ": дата поступления не может быть в будущем.");
                             continue;
                         }
 

@@ -72,7 +72,7 @@
             // 
             // btnSuppliers
             // 
-            btnSuppliers.Location = new Point(22, 218);
+            btnSuppliers.Location = new Point(516, 134);
             btnSuppliers.Name = "btnSuppliers";
             btnSuppliers.Size = new Size(177, 41);
             btnSuppliers.TabIndex = 3;
@@ -82,7 +82,7 @@
             // 
             // btnUsers
             // 
-            btnUsers.Location = new Point(22, 292);
+            btnUsers.Location = new Point(516, 225);
             btnUsers.Name = "btnUsers";
             btnUsers.Size = new Size(177, 41);
             btnUsers.TabIndex = 4;
@@ -112,7 +112,7 @@
             // 
             // btnExpiry
             // 
-            btnExpiry.Location = new Point(259, 218);
+            btnExpiry.Location = new Point(22, 225);
             btnExpiry.Name = "btnExpiry";
             btnExpiry.Size = new Size(177, 41);
             btnExpiry.TabIndex = 7;
@@ -122,7 +122,7 @@
             // 
             // btnReports
             // 
-            btnReports.Location = new Point(259, 292);
+            btnReports.Location = new Point(259, 225);
             btnReports.Name = "btnReports";
             btnReports.Size = new Size(177, 41);
             btnReports.TabIndex = 8;
