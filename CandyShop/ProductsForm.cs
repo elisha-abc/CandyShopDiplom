@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Windows.Forms;
-using ExcelDataReader;
-using System.IO;
-using System.Text;
 using Microsoft.Data.SqlClient;
 
 namespace CandyShop
@@ -17,7 +14,7 @@ namespace CandyShop
             InitializeComponent();
 
             
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            
         }
 
         private void ProductsForm_Load(object sender, EventArgs e)
@@ -32,10 +29,32 @@ namespace CandyShop
             dgvProducts.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvProducts.RowHeadersVisible = false;
 
+            dgvProducts.BackgroundColor = System.Drawing.Color.White;
+            dgvProducts.BorderStyle = BorderStyle.None;
+            dgvProducts.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+            dgvProducts.EnableHeadersVisualStyles = false;
+            dgvProducts.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvProducts.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvProducts.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvProducts.ColumnHeadersHeight = 35;
+
+            dgvProducts.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dgvProducts.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
+            dgvProducts.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvProducts.RowTemplate.Height = 30;
+
             cmbCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSupplier.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbUnit.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbFilterCategory.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            StyleButton(btnAdd, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+            StyleButton(btnEdit, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnSearch, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnResetFilter, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
 
             LoadCategories();
             LoadSuppliers();
@@ -44,69 +63,16 @@ namespace CandyShop
             LoadProducts();
         }
 
-        
-
-        private void btnImportExcel_Click(object sender, EventArgs e)
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "Excel Files|*.xlsx;*.xls;*.csv";
-
-            if (ofd.ShowDialog() != DialogResult.OK)
-                return;
-
-            try
-            {
-                using (var stream = File.Open(ofd.FileName, FileMode.Open, FileAccess.Read))
-                {
-                    using (var reader = ExcelReaderFactory.CreateReader(stream))
-                    {
-                        var result = reader.AsDataSet();
-                        DataTable table = result.Tables[0];
-
-                        using (SqlConnection connection = DatabaseHelper.GetConnection())
-                        {
-                            connection.Open();
-
-                            for (int i = 1; i < table.Rows.Count; i++) // пропускаем заголовок
-                            {
-                                var row = table.Rows[i];
-
-                                string name = row[0].ToString();
-                                int categoryId = Convert.ToInt32(row[1]);
-                                int supplierId = Convert.ToInt32(row[2]);
-                                decimal price = Convert.ToDecimal(row[3]);
-                                string unit = row[4].ToString();
-
-                                string query = @"
-IF NOT EXISTS (SELECT 1 FROM Products WHERE Name = @Name)
-BEGIN
-    INSERT INTO Products (Name, CategoryId, SupplierId, Price, Unit)
-    VALUES (@Name, @CategoryId, @SupplierId, @Price, @Unit)
-END";
-
-                                using (SqlCommand cmd = new SqlCommand(query, connection))
-                                {
-                                    cmd.Parameters.AddWithValue("@Name", name);
-                                    cmd.Parameters.AddWithValue("@CategoryId", categoryId);
-                                    cmd.Parameters.AddWithValue("@SupplierId", supplierId);
-                                    cmd.Parameters.AddWithValue("@Price", price);
-                                    cmd.Parameters.AddWithValue("@Unit", unit);
-
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-                        }
-                    }
-                }
-
-                MessageBox.Show("Импорт завершён!");
-                LoadProducts();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Ошибка импорта: " + ex.Message);
-            }
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
+
         private void LoadCategories()
         {
             try
@@ -266,13 +232,15 @@ END";
 
                 int stock = Convert.ToInt32(row.Cells["Остаток"].Value);
 
+                row.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(40, 40, 40);
+
                 if (stock == 0)
                 {
-                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightCoral;
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 220, 220);
                 }
                 else if (stock <= 5)
                 {
-                    row.DefaultCellStyle.BackColor = System.Drawing.Color.LightYellow;
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 245, 200);
                 }
                 else
                 {

@@ -25,7 +25,60 @@ namespace CandyShop
             dgvCategories.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvCategories.RowHeadersVisible = false;
 
+            dgvCategories.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvCategories.MultiSelect = false;
+            dgvCategories.ReadOnly = true;
+            dgvCategories.AllowUserToAddRows = false;
+            dgvCategories.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvCategories.RowHeadersVisible = false;
+
+            dgvCategories.BackgroundColor = System.Drawing.Color.White;
+            dgvCategories.BorderStyle = BorderStyle.None;
+            dgvCategories.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+
+            dgvCategories.EnableHeadersVisualStyles = false;
+            dgvCategories.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvCategories.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvCategories.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvCategories.ColumnHeadersHeight = 35;
+
+            foreach (DataGridViewColumn column in dgvCategories.Columns)
+            {
+                column.HeaderCell.Style.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+                column.HeaderCell.Style.ForeColor = System.Drawing.Color.White;
+                column.HeaderCell.Style.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            }
+
+            dgvCategories.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dgvCategories.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
+            dgvCategories.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvCategories.RowTemplate.Height = 30;
+
+            StyleButton(btnAdd, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+            StyleButton(btnEdit, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+
             LoadCategories();
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
+        }
+
+        private void HighlightCategories()
+        {
+            foreach (DataGridViewRow row in dgvCategories.Rows)
+            {
+                row.DefaultCellStyle.BackColor = System.Drawing.Color.White;
+            }
         }
 
         private void LoadCategories()
@@ -59,6 +112,8 @@ namespace CandyShop
                     "Ошибка",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+
+                HighlightCategories();
             }
         }
 

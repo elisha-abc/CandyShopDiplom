@@ -25,7 +25,40 @@ namespace CandyShop
             dgvSuppliers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvSuppliers.RowHeadersVisible = false;
 
+            this.BackColor = System.Drawing.Color.FromArgb(245, 247, 250);
+
+            dgvSuppliers.BackgroundColor = System.Drawing.Color.White;
+            dgvSuppliers.BorderStyle = BorderStyle.None;
+            dgvSuppliers.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+            dgvSuppliers.EnableHeadersVisualStyles = false;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvSuppliers.ColumnHeadersHeight = 35;
+
+            dgvSuppliers.EnableHeadersVisualStyles = false;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvSuppliers.ColumnHeadersHeight = 35;
+
+            StyleButton(btnAdd, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+            StyleButton(btnEdit, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+
             LoadSuppliers();
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
 
         private void LoadSuppliers()

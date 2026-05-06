@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            label1 = new Label();
+            lblTitle = new Label();
             label2 = new Label();
             label3 = new Label();
             txtLogin = new TextBox();
@@ -37,14 +37,14 @@
             chkShowPassword = new CheckBox();
             SuspendLayout();
             // 
-            // label1
+            // lblTitle
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(285, 73);
-            label1.Name = "label1";
-            label1.Size = new Size(89, 15);
-            label1.TabIndex = 1;
-            label1.Text = "Вход в систему";
+            lblTitle.AutoSize = true;
+            lblTitle.Location = new Point(285, 73);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(89, 15);
+            lblTitle.TabIndex = 1;
+            lblTitle.Text = "Вход в систему";
             // 
             // label2
             // 
@@ -110,7 +110,7 @@
             Controls.Add(txtLogin);
             Controls.Add(label3);
             Controls.Add(label2);
-            Controls.Add(label1);
+            Controls.Add(lblTitle);
             Name = "LoginForm";
             Text = "Авторизация";
             Load += LoginForm_Load;
@@ -120,7 +120,7 @@
 
         #endregion
 
-        private Label label1;
+        private Label lblTitle;
         private Label label2;
         private Label label3;
         private TextBox txtLogin;

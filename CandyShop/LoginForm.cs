@@ -13,13 +13,36 @@ namespace CandyShop
 
         private void LoginForm_Load(object sender, EventArgs e)
         {
-            txtPassword.UseSystemPasswordChar = true;
-
             this.Text = "Авторизация";
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.BackColor = System.Drawing.Color.FromArgb(245, 247, 250);
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
             this.AcceptButton = button1;
 
+            txtPassword.UseSystemPasswordChar = true;
+
+            lblTitle.Text = "Вход в систему";
+            lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            lblTitle.ForeColor = System.Drawing.Color.FromArgb(40, 40, 40);
+
+            txtLogin.Font = new System.Drawing.Font("Segoe UI", 10F);
+            txtPassword.Font = new System.Drawing.Font("Segoe UI", 10F);
+            chkShowPassword.Font = new System.Drawing.Font("Segoe UI", 9F);
+
+            StyleButton(button1, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+
             txtLogin.Focus();
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
 
         private void button1_Click(object sender, EventArgs e)

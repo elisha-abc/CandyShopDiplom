@@ -35,7 +35,7 @@
             btnAdd = new Button();
             btnEdit = new Button();
             btnDelete = new Button();
-            BtnClear = new Button();
+            btnClear = new Button();
             dgvWarehouse = new DataGridView();
             cmbProduct = new ComboBox();
             txtQuantity = new TextBox();
@@ -111,15 +111,15 @@
             btnDelete.UseVisualStyleBackColor = true;
             btnDelete.Click += btnDelete_Click;
             // 
-            // BtnClear
+            // btnClear
             // 
-            BtnClear.Location = new Point(611, 182);
-            BtnClear.Name = "BtnClear";
-            BtnClear.Size = new Size(166, 52);
-            BtnClear.TabIndex = 7;
-            BtnClear.Text = "Очистить";
-            BtnClear.UseVisualStyleBackColor = true;
-            BtnClear.Click += btnClear_Click;
+            btnClear.Location = new Point(611, 182);
+            btnClear.Name = "btnClear";
+            btnClear.Size = new Size(166, 52);
+            btnClear.TabIndex = 7;
+            btnClear.Text = "Очистить";
+            btnClear.UseVisualStyleBackColor = true;
+            btnClear.Click += btnClear_Click;
             // 
             // dgvWarehouse
             // 
@@ -180,7 +180,7 @@
             Controls.Add(txtQuantity);
             Controls.Add(cmbProduct);
             Controls.Add(dgvWarehouse);
-            Controls.Add(BtnClear);
+            Controls.Add(btnClear);
             Controls.Add(btnDelete);
             Controls.Add(btnEdit);
             Controls.Add(btnAdd);
@@ -205,7 +205,7 @@
         private Button btnAdd;
         private Button btnEdit;
         private Button btnDelete;
-        private Button BtnClear;
+        private Button btnClear;
         private DataGridView dgvWarehouse;
         private ComboBox cmbProduct;
         private TextBox txtQuantity;

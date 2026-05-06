@@ -31,7 +31,7 @@
             dtpSaleDate = new DateTimePicker();
             txtQuantity = new TextBox();
             cmbProduct = new ComboBox();
-            BtnClear = new Button();
+            btnClear = new Button();
             btnDelete = new Button();
             btnAdd = new Button();
             label3 = new Label();
@@ -66,15 +66,15 @@
             cmbProduct.TabIndex = 22;
             cmbProduct.SelectedIndexChanged += cmbProduct_SelectedIndexChanged;
             // 
-            // BtnClear
+            // btnClear
             // 
-            BtnClear.Location = new Point(549, 175);
-            BtnClear.Name = "BtnClear";
-            BtnClear.Size = new Size(220, 52);
-            BtnClear.TabIndex = 20;
-            BtnClear.Text = "Очистить";
-            BtnClear.UseVisualStyleBackColor = true;
-            BtnClear.Click += btnClear_Click;
+            btnClear.Location = new Point(549, 175);
+            btnClear.Name = "btnClear";
+            btnClear.Size = new Size(220, 52);
+            btnClear.TabIndex = 20;
+            btnClear.Text = "Очистить";
+            btnClear.UseVisualStyleBackColor = true;
+            btnClear.Click += btnClear_Click;
             // 
             // btnDelete
             // 
@@ -161,7 +161,7 @@
             Controls.Add(dtpSaleDate);
             Controls.Add(txtQuantity);
             Controls.Add(cmbProduct);
-            Controls.Add(BtnClear);
+            Controls.Add(btnClear);
             Controls.Add(btnDelete);
             Controls.Add(btnAdd);
             Controls.Add(label3);
@@ -180,7 +180,7 @@
         private DateTimePicker dtpSaleDate;
         private TextBox txtQuantity;
         private ComboBox cmbProduct;
-        private Button BtnClear;
+        private Button btnClear;
         private Button btnDelete;
         private Button btnAdd;
         private Label label3;

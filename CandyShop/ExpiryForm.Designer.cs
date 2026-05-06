@@ -36,6 +36,7 @@
             colQuantity = new DataGridViewTextBoxColumn();
             colExpiryDate = new DataGridViewTextBoxColumn();
             colDaysLeft = new DataGridViewTextBoxColumn();
+            ыефегы = new DataGridViewTextBoxColumn();
             btnWriteOff = new Button();
             ((System.ComponentModel.ISupportInitialize)numDays).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvExpiry).BeginInit();
@@ -59,7 +60,7 @@
             // 
             // btnLoad
             // 
-            btnLoad.Location = new Point(140, 91);
+            btnLoad.Location = new Point(464, 91);
             btnLoad.Name = "btnLoad";
             btnLoad.Size = new Size(186, 52);
             btnLoad.TabIndex = 2;
@@ -70,7 +71,7 @@
             // dgvExpiry
             // 
             dgvExpiry.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvExpiry.Columns.AddRange(new DataGridViewColumn[] { colProduct, colQuantity, colExpiryDate, colDaysLeft });
+            dgvExpiry.Columns.AddRange(new DataGridViewColumn[] { colProduct, colQuantity, colExpiryDate, colDaysLeft, ыефегы });
             dgvExpiry.Location = new Point(31, 158);
             dgvExpiry.Name = "dgvExpiry";
             dgvExpiry.Size = new Size(755, 277);
@@ -96,9 +97,14 @@
             colDaysLeft.HeaderText = "Осталось дней";
             colDaysLeft.Name = "colDaysLeft";
             // 
+            // ыефегы
+            // 
+            ыефегы.HeaderText = "Статус";
+            ыефегы.Name = "ыефегы";
+            // 
             // btnWriteOff
             // 
-            btnWriteOff.Location = new Point(455, 91);
+            btnWriteOff.Location = new Point(135, 91);
             btnWriteOff.Name = "btnWriteOff";
             btnWriteOff.Size = new Size(186, 52);
             btnWriteOff.TabIndex = 4;
@@ -137,5 +143,6 @@
         private DataGridViewTextBoxColumn colDaysLeft;
         private Button button1;
         private Button btnWriteOff;
+        private DataGridViewTextBoxColumn ыефегы;
     }
 }

@@ -24,6 +24,36 @@ namespace CandyShop
             numDays.Value = 7;
 
             LoadData();
+
+            dgvExpiry.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvExpiry.MultiSelect = false;
+            dgvExpiry.BackgroundColor = System.Drawing.Color.White;
+            dgvExpiry.BorderStyle = BorderStyle.None;
+            dgvExpiry.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+            dgvExpiry.EnableHeadersVisualStyles = false;
+            dgvExpiry.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvExpiry.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvExpiry.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvExpiry.ColumnHeadersHeight = 35;
+
+            dgvExpiry.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dgvExpiry.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
+            dgvExpiry.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvExpiry.RowTemplate.Height = 30;
+
+            StyleButton(btnLoad, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnWriteOff, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
 
         private void LoadData()
@@ -37,15 +67,15 @@ namespace CandyShop
                 connection.Open();
 
                 string query = @"
-                    SELECT 
-                        p.Name,
-                        w.Quantity,
-                        w.ExpiryDate,
-                        DATEDIFF(day, GETDATE(), w.ExpiryDate) AS DaysLeft
-                    FROM Warehouse w
-                    JOIN Products p ON w.ProductId = p.Id
-                    WHERE w.ExpiryDate <= DATEADD(day, @days, GETDATE())
-                    ORDER BY w.ExpiryDate";
+            SELECT 
+                p.Name,
+                w.Quantity,
+                w.ExpiryDate,
+                DATEDIFF(day, CAST(GETDATE() AS date), w.ExpiryDate) AS DaysLeft
+            FROM Warehouse w
+            JOIN Products p ON w.ProductId = p.Id
+            WHERE w.ExpiryDate <= DATEADD(day, @days, CAST(GETDATE() AS date))
+            ORDER BY w.ExpiryDate";
 
                 using (var cmd = new SqlCommand(query, connection))
                 {
@@ -55,14 +85,54 @@ namespace CandyShop
                     {
                         while (reader.Read())
                         {
+                            int daysLeft = Convert.ToInt32(reader["DaysLeft"]);
+
+                            string status;
+
+                            if (daysLeft < 0)
+                                status = "Просрочен";
+                            else if (daysLeft <= 7)
+                                status = "Скоро истекает";
+                            else
+                                status = "Годен";
+
                             dgvExpiry.Rows.Add(
                                 reader["Name"],
                                 reader["Quantity"],
                                 Convert.ToDateTime(reader["ExpiryDate"]).ToShortDateString(),
-                                reader["DaysLeft"]
+                                daysLeft,
+                                status
                             );
                         }
                     }
+                }
+            }
+
+            HighlightExpiryRows();
+        }
+
+        private void HighlightExpiryRows()
+        {
+            foreach (DataGridViewRow row in dgvExpiry.Rows)
+            {
+                if (row.Cells[3].Value == null)
+                    continue;
+
+                int daysLeft = Convert.ToInt32(row.Cells[3].Value);
+
+                row.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(40, 40, 40);
+
+                if (daysLeft < 0)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 220, 220);
+                }
+                else if (daysLeft <= 7)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 245, 200);
+                }
+                else
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.White;
                 }
             }
         }

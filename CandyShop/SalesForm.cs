@@ -27,12 +27,44 @@ namespace CandyShop
             dgvSales.RowHeadersVisible = false;
             dgvSales.AutoGenerateColumns = true;
 
+            this.BackColor = System.Drawing.Color.FromArgb(245, 247, 250);
+
+            dgvSales.BackgroundColor = System.Drawing.Color.White;
+            dgvSales.BorderStyle = BorderStyle.None;
+            dgvSales.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+            dgvSales.EnableHeadersVisualStyles = false;
+            dgvSales.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvSales.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvSales.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvSales.ColumnHeadersHeight = 35;
+
+            dgvSales.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dgvSales.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
+            dgvSales.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvSales.RowTemplate.Height = 30;
+
+            StyleButton(btnAdd, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+            StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
             cmbProduct.DropDownStyle = ComboBoxStyle.DropDownList;
 
             LoadProducts();
             LoadSales();
 
             lblStockValue.Text = "0";
+            dtpSaleDate.Value = DateTime.Now;
+            dtpSaleDate.Enabled = false;
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
 
         private void LoadProducts()
@@ -228,7 +260,7 @@ namespace CandyShop
                         {
                             saleCommand.Parameters.AddWithValue("@ProductId", productId);
                             saleCommand.Parameters.AddWithValue("@Quantity", quantity);
-                            saleCommand.Parameters.AddWithValue("@SaleDate", dtpSaleDate.Value.Date);
+                            saleCommand.Parameters.AddWithValue("@SaleDate", DateTime.Now.Date);
                             saleCommand.ExecuteNonQuery();
                         }
 
@@ -382,15 +414,16 @@ namespace CandyShop
                             deleteCommand.ExecuteNonQuery();
                         }
 
-                        string returnToWarehouseQuery = @"
-                    UPDATE Warehouse
-                    SET Quantity = Quantity + @Quantity
-                    WHERE ProductId = @ProductId";
+                        string insertBackQuery = @"
+INSERT INTO Warehouse (ProductId, Quantity, ReceiptDate, ExpiryDate)
+VALUES (@ProductId, @Quantity, @ReceiptDate, @ExpiryDate)";
 
-                        using (SqlCommand warehouseCommand = new SqlCommand(returnToWarehouseQuery, connection, transaction))
+                        using (SqlCommand warehouseCommand = new SqlCommand(insertBackQuery, connection, transaction))
                         {
-                            warehouseCommand.Parameters.AddWithValue("@Quantity", quantity);
                             warehouseCommand.Parameters.AddWithValue("@ProductId", productId);
+                            warehouseCommand.Parameters.AddWithValue("@Quantity", quantity);
+                            warehouseCommand.Parameters.AddWithValue("@ReceiptDate", DateTime.Now.Date);
+                            warehouseCommand.Parameters.AddWithValue("@ExpiryDate", DateTime.Now.Date.AddMonths(1)); 
                             warehouseCommand.ExecuteNonQuery();
                         }
 

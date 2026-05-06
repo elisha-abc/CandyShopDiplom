@@ -24,44 +24,39 @@ namespace CandyShop
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Size = new Size(760, 520);
+            this.Size = new Size(760, 500);
 
-            // Убираем всплывающее окно с ролью
-            // MessageBox.Show("Роль пользователя: " + userRole);
+            lblTitle.Text = "Магазин кондитерских изделий";
+            lblTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.FromArgb(40, 40, 40);
+            lblTitle.AutoSize = true;
+            lblTitle.Location = new Point(35, 25);
 
             Button[] allButtons =
             {
-        btnProducts,
-        btnWarehouse,
-        btnSales,
-        btnExpiry,
-        btnCategories,
-        btnSuppliers,
-        btnUsers,
-        btnReports,
-        btnLogs
+        btnProducts, btnWarehouse, btnSales,
+        btnExpiry, btnCategories, btnSuppliers,
+        btnUsers, btnReports, btnLogs
     };
 
             foreach (Button btn in allButtons)
             {
                 btn.Visible = true;
-                btn.Width = 190;
-                btn.Height = 55;
+                btn.Size = new Size(200, 55);
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.FlatAppearance.BorderSize = 0;
                 btn.BackColor = Color.White;
                 btn.ForeColor = Color.FromArgb(35, 35, 35);
-                btn.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
+                btn.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
                 btn.Cursor = Cursors.Hand;
             }
 
-            btnExit.Width = 190;
-            btnExit.Height = 45;
+            btnExit.Size = new Size(200, 50);
             btnExit.FlatStyle = FlatStyle.Flat;
             btnExit.FlatAppearance.BorderSize = 0;
             btnExit.BackColor = Color.FromArgb(220, 53, 69);
             btnExit.ForeColor = Color.White;
-            btnExit.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
+            btnExit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnExit.Cursor = Cursors.Hand;
 
             if (userRole == "Кассир")
@@ -78,29 +73,23 @@ namespace CandyShop
 
         private void ArrangeButtons()
         {
-            Button[] visibleButtons =
+            Button[] menuButtons =
             {
-        btnProducts,
-        btnWarehouse,
-        btnSales,
-        btnExpiry,
-        btnCategories,
-        btnSuppliers,
-        btnUsers,
-        btnReports,
-        btnLogs
+        btnProducts, btnWarehouse, btnSales,
+        btnExpiry, btnCategories, btnSuppliers,
+        btnUsers, btnReports, btnLogs
     };
 
-            int buttonWidth = 190;
-            int buttonHeight = 55;
-            int gapX = 35;
-            int gapY = 25;
-            int columns = 3;
+            var buttons = menuButtons.Where(b => b.Visible).ToArray();
 
-            var buttons = visibleButtons.Where(b => b.Visible).ToArray();
+            int buttonWidth = 200;
+            int buttonHeight = 55;
+            int gapX = 30;
+            int gapY = 25;
+            int columns = userRole == "Кассир" ? 2 : 3;
 
             int totalWidth = columns * buttonWidth + (columns - 1) * gapX;
-            int startX = (this.ClientSize.Width - totalWidth) / 2;
+            int startX = (ClientSize.Width - totalWidth) / 2;
             int startY = 105;
 
             for (int i = 0; i < buttons.Length; i++)
@@ -108,15 +97,15 @@ namespace CandyShop
                 int row = i / columns;
                 int col = i % columns;
 
-                int x = startX + col * (buttonWidth + gapX);
-                int y = startY + row * (buttonHeight + gapY);
-
-                buttons[i].Location = new Point(x, y);
+                buttons[i].Location = new Point(
+                    startX + col * (buttonWidth + gapX),
+                    startY + row * (buttonHeight + gapY)
+                );
             }
 
             btnExit.Location = new Point(
-                this.ClientSize.Width - btnExit.Width - 35,
-                this.ClientSize.Height - btnExit.Height - 35
+                ClientSize.Width - btnExit.Width - 35,
+                ClientSize.Height - btnExit.Height - 35
             );
         }
 

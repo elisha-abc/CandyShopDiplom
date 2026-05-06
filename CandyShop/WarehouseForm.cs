@@ -26,8 +26,40 @@ namespace CandyShop
             dgvWarehouse.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvWarehouse.RowHeadersVisible = false;
 
+            dgvWarehouse.BackgroundColor = System.Drawing.Color.White;
+            dgvWarehouse.BorderStyle = BorderStyle.None;
+            dgvWarehouse.GridColor = System.Drawing.Color.FromArgb(230, 230, 230);
+
+            dgvWarehouse.EnableHeadersVisualStyles = false;
+            dgvWarehouse.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvWarehouse.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvWarehouse.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvWarehouse.ColumnHeadersHeight = 35;
+
+            dgvWarehouse.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
+            dgvWarehouse.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
+            dgvWarehouse.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvWarehouse.RowTemplate.Height = 30;
+
+            StyleButton(btnAdd, System.Drawing.Color.FromArgb(52, 152, 219), System.Drawing.Color.White);
+            StyleButton(btnEdit, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+            StyleButton(btnImportWarehouse, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
+
             LoadProducts();
             LoadWarehouse();
+
+        }
+
+        private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 0;
+            button.BackColor = backColor;
+            button.ForeColor = foreColor;
+            button.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            button.Cursor = Cursors.Hand;
         }
 
         private void LoadProducts()
@@ -49,6 +81,32 @@ namespace CandyShop
             }
         }
 
+        private void HighlightWarehouseRows()
+        {
+            foreach (DataGridViewRow row in dgvWarehouse.Rows)
+            {
+                if (row.Cells["Срок годности"].Value == null)
+                    continue;
+
+                DateTime expiryDate = Convert.ToDateTime(row.Cells["Срок годности"].Value);
+                int daysLeft = (expiryDate.Date - DateTime.Now.Date).Days;
+
+                row.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(40, 40, 40);
+
+                if (daysLeft < 0)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 220, 220);
+                }
+                else if (daysLeft <= 7)
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(255, 245, 200);
+                }
+                else
+                {
+                    row.DefaultCellStyle.BackColor = System.Drawing.Color.White;
+                }
+            }
+        }
         private void LoadWarehouse()
         {
             using (SqlConnection connection = DatabaseHelper.GetConnection())
@@ -74,6 +132,8 @@ namespace CandyShop
 
                 if (dgvWarehouse.Columns["Id"] != null)
                     dgvWarehouse.Columns["Id"].Visible = false;
+
+                HighlightWarehouseRows();
             }
         }
 
