@@ -48,7 +48,30 @@ namespace CandyShop
             StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
             StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
 
+            ApplyGridStyle();
             LoadSuppliers();
+            ApplyGridStyle();
+        }
+
+        private void ApplyGridStyle()
+        {
+            dgvSuppliers.EnableHeadersVisualStyles = false;
+
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvSuppliers.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvSuppliers.ColumnHeadersHeight = 35;
+
+            foreach (DataGridViewColumn column in dgvSuppliers.Columns)
+            {
+                column.HeaderCell.Style.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+                column.HeaderCell.Style.ForeColor = System.Drawing.Color.White;
+                column.HeaderCell.Style.SelectionBackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+                column.HeaderCell.Style.SelectionForeColor = System.Drawing.Color.White;
+                column.HeaderCell.Style.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            }
         }
 
         private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)

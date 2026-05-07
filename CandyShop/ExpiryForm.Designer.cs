@@ -32,12 +32,11 @@
             numDays = new NumericUpDown();
             btnLoad = new Button();
             dgvExpiry = new DataGridView();
+            btnWriteOff = new Button();
             colProduct = new DataGridViewTextBoxColumn();
             colQuantity = new DataGridViewTextBoxColumn();
             colExpiryDate = new DataGridViewTextBoxColumn();
             colDaysLeft = new DataGridViewTextBoxColumn();
-            ыефегы = new DataGridViewTextBoxColumn();
-            btnWriteOff = new Button();
             ((System.ComponentModel.ISupportInitialize)numDays).BeginInit();
             ((System.ComponentModel.ISupportInitialize)dgvExpiry).BeginInit();
             SuspendLayout();
@@ -71,11 +70,21 @@
             // dgvExpiry
             // 
             dgvExpiry.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgvExpiry.Columns.AddRange(new DataGridViewColumn[] { colProduct, colQuantity, colExpiryDate, colDaysLeft, ыефегы });
+            dgvExpiry.Columns.AddRange(new DataGridViewColumn[] { colProduct, colQuantity, colExpiryDate, colDaysLeft });
             dgvExpiry.Location = new Point(31, 158);
             dgvExpiry.Name = "dgvExpiry";
             dgvExpiry.Size = new Size(755, 277);
             dgvExpiry.TabIndex = 3;
+            // 
+            // btnWriteOff
+            // 
+            btnWriteOff.Location = new Point(135, 91);
+            btnWriteOff.Name = "btnWriteOff";
+            btnWriteOff.Size = new Size(186, 52);
+            btnWriteOff.TabIndex = 4;
+            btnWriteOff.Text = "Списать просроченные";
+            btnWriteOff.UseVisualStyleBackColor = true;
+            btnWriteOff.Click += btnWriteOff_Click;
             // 
             // colProduct
             // 
@@ -96,21 +105,6 @@
             // 
             colDaysLeft.HeaderText = "Осталось дней";
             colDaysLeft.Name = "colDaysLeft";
-            // 
-            // ыефегы
-            // 
-            ыефегы.HeaderText = "Статус";
-            ыефегы.Name = "ыефегы";
-            // 
-            // btnWriteOff
-            // 
-            btnWriteOff.Location = new Point(135, 91);
-            btnWriteOff.Name = "btnWriteOff";
-            btnWriteOff.Size = new Size(186, 52);
-            btnWriteOff.TabIndex = 4;
-            btnWriteOff.Text = "Списать просроченные";
-            btnWriteOff.UseVisualStyleBackColor = true;
-            btnWriteOff.Click += btnWriteOff_Click;
             // 
             // ExpiryForm
             // 
@@ -137,12 +131,11 @@
         private NumericUpDown numDays;
         private Button btnLoad;
         private DataGridView dgvExpiry;
+        private Button button1;
+        private Button btnWriteOff;
         private DataGridViewTextBoxColumn colProduct;
         private DataGridViewTextBoxColumn colQuantity;
         private DataGridViewTextBoxColumn colExpiryDate;
         private DataGridViewTextBoxColumn colDaysLeft;
-        private Button button1;
-        private Button btnWriteOff;
-        private DataGridViewTextBoxColumn ыефегы;
     }
 }

@@ -43,13 +43,6 @@ namespace CandyShop
             dgvCategories.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             dgvCategories.ColumnHeadersHeight = 35;
 
-            foreach (DataGridViewColumn column in dgvCategories.Columns)
-            {
-                column.HeaderCell.Style.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
-                column.HeaderCell.Style.ForeColor = System.Drawing.Color.White;
-                column.HeaderCell.Style.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            }
-
             dgvCategories.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F);
             dgvCategories.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(41, 128, 185);
             dgvCategories.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
@@ -60,7 +53,30 @@ namespace CandyShop
             StyleButton(btnDelete, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
             StyleButton(btnClear, System.Drawing.Color.White, System.Drawing.Color.FromArgb(40, 40, 40));
 
+            ApplyGridStyle();
             LoadCategories();
+            ApplyGridStyle();
+        }
+
+        private void ApplyGridStyle()
+        {
+            dgvCategories.EnableHeadersVisualStyles = false;
+
+            dgvCategories.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvCategories.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvCategories.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+            dgvCategories.ColumnHeadersDefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvCategories.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            dgvCategories.ColumnHeadersHeight = 35;
+
+            foreach (DataGridViewColumn column in dgvCategories.Columns)
+            {
+                column.HeaderCell.Style.BackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+                column.HeaderCell.Style.ForeColor = System.Drawing.Color.White;
+                column.HeaderCell.Style.SelectionBackColor = System.Drawing.Color.FromArgb(52, 73, 94);
+                column.HeaderCell.Style.SelectionForeColor = System.Drawing.Color.White;
+                column.HeaderCell.Style.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            }
         }
 
         private void StyleButton(Button button, System.Drawing.Color backColor, System.Drawing.Color foreColor)
